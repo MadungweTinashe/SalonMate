@@ -486,7 +486,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 !date ||
                 !time
             ) {
+const alreadyBooked = appointments.some(function (appointment) {
+    return (
+        appointment.date === date &&
+        appointment.time === time
+    );
+});
 
+if (alreadyBooked) {
+    alert("This time is already booked. Please choose another time.");
+    return;
+} 
                 alert(
                     "Please select a customer, select a service, and complete the date and time."
                 );
