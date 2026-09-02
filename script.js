@@ -473,7 +473,8 @@ appointmentForm.addEventListener(
         const time =
             document.getElementById("appointmentTime").value;
 
-
+const status =
+    document.getElementById("appointmentStatus").value;
         if (
             !customerName ||
             !serviceName ||
@@ -517,8 +518,8 @@ appointmentForm.addEventListener(
             serviceName: serviceName,
 
             date: date,
-
-            time: time
+            time; time,
+            status: status
         });
 
 
