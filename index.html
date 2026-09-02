@@ -10,6 +10,7 @@
 <body>
 
 <header class="topbar">
+
     <div>
         <h1>SalonMate</h1>
         <p>Salon management made simple</p>
@@ -18,6 +19,7 @@
     <button id="addAppointmentBtn" class="primary-btn">
         + Appointment
     </button>
+
 </header>
 
 
@@ -26,8 +28,13 @@
     <!-- DASHBOARD -->
 
     <section class="welcome-card">
+
         <h2>Welcome to SalonMate 👋</h2>
-        <p>Manage your salon, customers, services and appointments.</p>
+
+        <p>
+            Manage your salon, customers, services and appointments.
+        </p>
+
     </section>
 
 
@@ -53,6 +60,16 @@
             <strong id="todayAppointments">0</strong>
         </div>
 
+        <div class="stat-card">
+            <span>Total Revenue</span>
+            <strong id="totalRevenue">R0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Today's Revenue</span>
+            <strong id="todayRevenue">R0</strong>
+        </div>
+
     </section>
 
 
@@ -60,36 +77,61 @@
 
     <section class="management-grid">
 
+
+        <!-- CUSTOMERS -->
+
         <div class="panel">
 
             <div class="panel-header">
+
                 <div>
                     <h2>Customers</h2>
-                    <p>Manage your salon customers.</p>
+
+                    <p>
+                        Manage your salon customers.
+                    </p>
                 </div>
 
-                <button id="addCustomerBtn" class="small-btn">
+                <button
+                    id="addCustomerBtn"
+                    class="small-btn">
+
                     + Customer
+
                 </button>
+
             </div>
+
 
             <div id="customersList"></div>
 
         </div>
 
 
+        <!-- SERVICES -->
+
         <div class="panel">
 
             <div class="panel-header">
+
                 <div>
                     <h2>Services</h2>
-                    <p>Manage your salon services.</p>
+
+                    <p>
+                        Manage your salon services.
+                    </p>
                 </div>
 
-                <button id="addServiceBtn" class="small-btn">
+                <button
+                    id="addServiceBtn"
+                    class="small-btn">
+
                     + Service
+
                 </button>
+
             </div>
+
 
             <div id="servicesList"></div>
 
@@ -105,12 +147,22 @@
         <div class="panel-header appointment-header">
 
             <div>
+
                 <h2>Appointments</h2>
-                <p>View and manage your appointments.</p>
+
+                <p>
+                    View and manage your appointments.
+                </p>
+
             </div>
 
-            <button id="clearAppointmentsBtn" class="danger-btn">
+
+            <button
+                id="clearAppointmentsBtn"
+                class="danger-btn">
+
                 Clear All
+
             </button>
 
         </div>
@@ -124,12 +176,29 @@
                 placeholder="Search appointments..."
             >
 
+
             <select id="statusFilter">
-                <option value="All">All statuses</option>
-                <option value="Booked">Booked</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="No-show">No-show</option>
+
+                <option value="All">
+                    All statuses
+                </option>
+
+                <option value="Booked">
+                    Booked
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+
+                <option value="Cancelled">
+                    Cancelled
+                </option>
+
+                <option value="No-show">
+                    No-show
+                </option>
+
             </select>
 
         </div>
@@ -144,27 +213,48 @@
 
 <!-- APPOINTMENT MODAL -->
 
-<div id="appointmentModal" class="modal hidden">
+<div
+    id="appointmentModal"
+    class="modal hidden">
+
 
     <div class="modal-content">
 
-        <div class="modal-header">
-            <h2>New Appointment</h2>
 
-            <button id="closeModalBtn" class="close-btn">
+        <div class="modal-header">
+
+            <h2 id="appointmentModalTitle">
+                New Appointment
+            </h2>
+
+
+            <button
+                id="closeModalBtn"
+                class="close-btn">
+
                 ×
+
             </button>
+
         </div>
 
 
         <form id="appointmentForm">
 
+
             <label for="customerName">
                 Customer
             </label>
 
-            <select id="customerName" required>
-                <option value="">Select customer</option>
+
+            <select
+                id="customerName"
+                required>
+
+                <option value="">
+                    Select customer
+                </option>
+
             </select>
 
 
@@ -172,14 +262,22 @@
                 Service
             </label>
 
-            <select id="serviceName" required>
-                <option value="">Select service</option>
+
+            <select
+                id="serviceName"
+                required>
+
+                <option value="">
+                    Select service
+                </option>
+
             </select>
 
 
             <label for="appointmentDate">
                 Date
             </label>
+
 
             <input
                 type="date"
@@ -192,6 +290,7 @@
                 Time
             </label>
 
+
             <input
                 type="time"
                 id="appointmentTime"
@@ -203,17 +302,52 @@
                 Status
             </label>
 
-            <select id="appointmentStatus" required>
-                <option value="Booked">Booked</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="No-show">No-show</option>
+
+            <select
+                id="appointmentStatus"
+                required>
+
+                <option value="Booked">
+                    Booked
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+
+                <option value="Cancelled">
+                    Cancelled
+                </option>
+
+                <option value="No-show">
+                    No-show
+                </option>
+
             </select>
 
 
-            <button type="submit" class="save-btn">
+            <label for="appointmentPayment">
+                Payment (R)
+            </label>
+
+
+            <input
+                type="number"
+                id="appointmentPayment"
+                min="0"
+                step="0.01"
+                placeholder="0"
+            >
+
+
+            <button
+                type="submit"
+                class="save-btn">
+
                 Save Appointment
+
             </button>
+
 
         </form>
 
@@ -224,24 +358,37 @@
 
 <!-- CUSTOMER MODAL -->
 
-<div id="customerModal" class="modal hidden">
+<div
+    id="customerModal"
+    class="modal hidden">
+
 
     <div class="modal-content">
 
+
         <div class="modal-header">
+
             <h2>New Customer</h2>
 
-            <button id="closeCustomerModalBtn" class="close-btn">
+
+            <button
+                id="closeCustomerModalBtn"
+                class="close-btn">
+
                 ×
+
             </button>
+
         </div>
 
 
         <form id="customerForm">
 
+
             <label for="newCustomerName">
                 Customer Name
             </label>
+
 
             <input
                 type="text"
@@ -255,6 +402,7 @@
                 Phone Number
             </label>
 
+
             <input
                 type="tel"
                 id="customerPhone"
@@ -262,8 +410,12 @@
             >
 
 
-            <button type="submit" class="save-btn">
+            <button
+                type="submit"
+                class="save-btn">
+
                 Save Customer
+
             </button>
 
         </form>
@@ -275,24 +427,37 @@
 
 <!-- SERVICE MODAL -->
 
-<div id="serviceModal" class="modal hidden">
+<div
+    id="serviceModal"
+    class="modal hidden">
+
 
     <div class="modal-content">
 
+
         <div class="modal-header">
+
             <h2>New Service</h2>
 
-            <button id="closeServiceModalBtn" class="close-btn">
+
+            <button
+                id="closeServiceModalBtn"
+                class="close-btn">
+
                 ×
+
             </button>
+
         </div>
 
 
         <form id="serviceForm">
 
+
             <label for="newServiceName">
                 Service Name
             </label>
+
 
             <input
                 type="text"
@@ -305,6 +470,7 @@
             <label for="servicePrice">
                 Price (R)
             </label>
+
 
             <input
                 type="number"
@@ -320,6 +486,7 @@
                 Duration (minutes)
             </label>
 
+
             <input
                 type="number"
                 id="serviceDuration"
@@ -329,8 +496,12 @@
             >
 
 
-            <button type="submit" class="save-btn">
+            <button
+                type="submit"
+                class="save-btn">
+
                 Save Service
+
             </button>
 
         </form>
