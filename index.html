@@ -1,337 +1,93 @@
-
-
-       <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#8b5cf6">
 
-    <meta name="theme-color" content="#8b5cf6">
+<title>SalonMate</title>
 
-    <title>SalonMate</title>
+<link rel="stylesheet" href="style.css">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+</head><body><header>
+    <h1>💇🏽‍♀️ SalonMate</h1>
+    <p>Your salon, simplified.</p>
+</header>
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f7f5fb;
-            color: #222;
-        }
+<main>
 
-        header {
-            background: #8b5cf6;
-            color: white;
-            padding: 24px 20px;
-            border-radius: 0 0 24px 24px;
-        }
+    <div class="welcome">
+        <h2>Welcome back 👋🏽</h2>
+        <p>Here's what's happening today.</p>
+    </div>
 
-        header h1 {
-            margin: 0;
-            font-size: 28px;
-        }
+    <div class="stats">
 
-        header p {
-            margin: 8px 0 0;
-            opacity: 0.9;
-        }
-
-        main {
-            padding: 20px;
-            max-width: 700px;
-            margin: auto;
-        }
-
-        .welcome {
-            margin-bottom: 20px;
-        }
-
-        .welcome h2 {
-            margin-bottom: 5px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        }
-
-        .stat-number {
-            font-size: 30px;
-            font-weight: bold;
-            color: #8b5cf6;
-            margin-top: 8px;
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            margin-top: 20px;
-        }
-
-        .action-card {
-            background: white;
-            padding: 22px 15px;
-            border-radius: 18px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            cursor: pointer;
-        }
-
-        .action-card .icon {
-            font-size: 32px;
-        }
-
-        .action-card h3 {
-            margin: 10px 0 0;
-            font-size: 16px;
-        }
-
-        .add-button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 16px;
-            border: none;
-            border-radius: 15px;
-            background: #8b5cf6;
-            color: white;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .section {
-            margin-top: 25px;
-        }
-
-        .section h2 {
-            font-size: 20px;
-        }
-
-        .empty {
-            background: white;
-            padding: 25px;
-            border-radius: 18px;
-            text-align: center;
-            color: #777;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 20px;
-            color: #888;
-            font-size: 13px;
-        }
-
-        @media (max-width: 400px) {
-            .stats,
-            .actions {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <header>
-        <h1>💇🏽‍♀️ SalonMate</h1>
-        <p>Your salon, simplified.</p>
-    </header>
-
-    <main>
-
-        <div class="welcome">
-            <h2>Welcome back 👋🏽</h2>
-            <p>Here's what's happening today.</p>
+        <div class="card">
+            <div>📅 Appointments</div>
+            <div class="stat-number" id="appointmentCount">0</div>
         </div>
 
-        <div class="stats">
-
-            <div class="card">
-                <div>📅 Appointments</div>
-                <div class="stat-number" id="appointmentCount">0</div>
-            </div>
-
-            <div class="card">
-                <div>👩🏽 Customers</div>
-                <div class="stat-number" id="customerCount">0</div>
-            </div>
-
-            <div class="card">
-                <div>💇🏽 Services</div>
-                <div class="stat-number" id="serviceCount">0</div>
-            </div>
-
-            <div class="card">
-                <div>💰 Today's Sales</div>
-                <div class="stat-number">R0</div>
-            </div>
-
+        <div class="card">
+            <div>👩🏽 Customers</div>
+            <div class="stat-number" id="customerCount">0</div>
         </div>
 
-        <div class="actions">
-
-            <div class="action-card" onclick="showMessage('Appointments')">
-                <div class="icon">📅</div>
-                <h3>Appointments</h3>
-            </div>
-
-            <div class="action-card" onclick="showMessage('Customers')">
-                <div class="icon">👩🏽</div>
-                <h3>Customers</h3>
-            </div>
-
-            <div class="action-card" onclick="showMessage('Services')">
-                <div class="icon">💇🏽‍♀️</div>
-                <h3>Services</h3>
-            </div>
-
-            <div class="action-card" onclick="showMessage('Sales')">
-                <div class="icon">💰</div>
-                <h3>Sales</h3>
-            </div>
-
+        <div class="card">
+            <div>💇🏽 Services</div>
+            <div class="stat-number" id="serviceCount">0</div>
         </div>
 
-        <button class="add-button" onclick="addAppointment()">
-            + Add Appointment
-        </button>
-
-        <div class="section">
-            <h2>Today's Appointments</h2>
-
-            <div class="empty" id="appointments">
-                <div style="font-size:40px;">📅</div>
-                <p>No appointments yet.</p>
-                <p>Add your first appointment to get started.</p>
-            </div>
+        <div class="card">
+            <div>💰 Today's Sales</div>
+            <div class="stat-number">R0</div>
         </div>
 
-    </main>
+    </div>
 
-    <footer>
-        SalonMate © 2026
-    </footer>
+    <div class="actions">
 
-    <script>
+        <div class="action-card" onclick="showMessage('Appointments')">
+            <div class="icon">📅</div>
+            <h3>Appointments</h3>
+        </div>
 
-        let appointments = [];
-        let customers = [];
-        let services = [];
+        <div class="action-card" onclick="showMessage('Customers')">
+            <div class="icon">👩🏽</div>
+            <h3>Customers</h3>
+        </div>
 
-        function updateDashboard() {
+        <div class="action-card" onclick="showMessage('Services')">
+            <div class="icon">💇🏽‍♀️</div>
+            <h3>Services</h3>
+        </div>
 
-            document.getElementById("appointmentCount").textContent =
-                appointments.length;
+        <div class="action-card" onclick="showMessage('Sales')">
+            <div class="icon">💰</div>
+            <h3>Sales</h3>
+        </div>
 
-            document.getElementById("customerCount").textContent =
-                customers.length;
+    </div>
 
-            document.getElementById("serviceCount").textContent =
-                services.length;
-        }
+    <button class="add-button" onclick="addAppointment()">
+        + Add Appointment
+    </button>
 
-        function addAppointment() {
+    <div class="section">
+        <h2>Today's Appointments</h2>
 
-            const name = prompt("Enter customer name:");
+        <div class="empty" id="appointments">
+            <div style="font-size:40px;">📅</div>
+            <p>No appointments yet.</p>
+            <p>Add your first appointment to get started.</p>
+        </div>
+    </div>
 
-            if (!name) {
-                return;
-            }
+</main>
 
-            const service = prompt("Enter the service:");
+<footer>
+    SalonMate © 2026
+</footer>
 
-            if (!service) {
-                return;
-            }
-
-            const time = prompt("Enter appointment time:");
-
-            if (!time) {
-                return;
-            }
-
-            appointments.push({
-                name: name,
-                service: service,
-                time: time
-            });
-
-            if (!customers.includes(name)) {
-                customers.push(name);
-            }
-
-            if (!services.includes(service)) {
-                services.push(service);
-            }
-
-            displayAppointments();
-            updateDashboard();
-
-            alert("Appointment added successfully! 🎉");
-        }
-
-        function displayAppointments() {
-
-            const container =
-                document.getElementById("appointments");
-
-            if (appointments.length === 0) {
-
-                container.innerHTML = `
-                    <div style="font-size:40px;">📅</div>
-                    <p>No appointments yet.</p>
-                    <p>Add your first appointment to get started.</p>
-                `;
-
-                return;
-            }
-
-            container.innerHTML = "";
-
-            appointments.forEach(function(appointment) {
-
-                const item = document.createElement("div");
-
-                item.style.textAlign = "left";
-                item.style.padding = "15px";
-                item.style.marginBottom = "10px";
-                item.style.background = "#f7f5fb";
-                item.style.borderRadius = "12px";
-
-                item.innerHTML = `
-                    <strong>👩🏽 ${appointment.name}</strong><br>
-                    💇🏽‍♀️ ${appointment.service}<br>
-                    🕐 ${appointment.time}
-                `;
-
-                container.appendChild(item);
-            });
-        }
-
-        function showMessage(section) {
-
-            alert(
-                section +
-                " section is coming next! 🚀"
-            );
-        }
-
-        updateDashboard();
-
-    </script>
+<script src="script.js"></script>
 
 </body>
-</html>    
+</html>
