@@ -1,64 +1,149 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-let appointments = JSON.parse(
-    localStorage.getItem("salonMateAppointments")
-) || [];
+let appointments = JSON.parse(localStorage.getItem("salonMateAppointments")) || [];
+let customers = JSON.parse(localStorage.getItem("salonMateCustomers")) || [];
+let services = JSON.parse(localStorage.getItem("salonMateServices")) || [];
 
-let customers = JSON.parse(
-    localStorage.getItem("salonMateCustomers")
-) || [];
+const addAppointmentBtn = document.getElementById("addAppointmentBtn");
+const appointmentModal = document.getElementById("appointmentModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const appointmentForm = document.getElementById("appointmentForm");
 
-let services = JSON.parse(
-    localStorage.getItem("salonMateServices")
-) || [];
+const addCustomerBtn = document.getElementById("addCustomerBtn");
+const customerModal = document.getElementById("customerModal");
+const closeCustomerModalBtn = document.getElementById("closeCustomerModalBtn");
+const customerForm = document.getElementById("customerForm");
 
-const addAppointmentBtn =
-    document.getElementById("addAppointmentBtn");
+const addServiceBtn = document.getElementById("addServiceBtn");
+const serviceModal = document.getElementById("serviceModal");
+const closeServiceModalBtn = document.getElementById("closeServiceModalBtn");
+const serviceForm = document.getElementById("serviceForm");
 
-const closeModalBtn =
-    document.getElementById("closeModalBtn");
-
-const appointmentModal =
-    document.getElementById("appointmentModal");
-
-const appointmentForm =
-    document.getElementById("appointmentForm");
-
-const appointmentsList =
-    document.getElementById("appointmentsList");
-
-const clearAppointmentsBtn =
-    document.getElementById("clearAppointmentsBtn");
+const appointmentsList = document.getElementById("appointmentsList");
+const customersList = document.getElementById("customersList");
+const servicesList = document.getElementById("servicesList");
+const clearAppointmentsBtn = document.getElementById("clearAppointmentsBtn");
 
 
 function saveData() {
-    localStorage.setItem(
-        "salonMateAppointments",
-        JSON.stringify(appointments)
-    );
+    localStorage.setItem("salonMateAppointments", JSON.stringify(appointments));
+    localStorage.setItem("salonMateCustomers", JSON.stringify(customers));
+    localStorage.setItem("salonMateServices", JSON.stringify(services));
+}
 
-    localStorage.setItem(
-        "salonMateCustomers",
-        JSON.stringify(customers)
-    );
 
-    localStorage.setItem(
-        "salonMateServices",
-        JSON.stringify(services)
-    );
+function escapeHTML(value) {
+    const div = document.createElement("div");
+    div.textContent = value;
+    return div.innerHTML;
 }
 
 
 function updateDashboard() {
+    document.getElementById("totalAppointments").textContent = appointments.length;
+    document.getElementById("totalCustomers").textContent = customers.length;
+    document.getElementById("totalServices").textContent = services.length;
+}
 
-    document.getElementById("totalAppointments").textContent =
-        appointments.length;
 
-    document.getElementById("totalCustomers").textContent =
-        customers.length;
+function displayCustomers() {
+    customersList.innerHTML = "";
 
-    document.getElementById("totalServices").textContent =
-        services.length;
+    if (customers.length === 0) {
+        customersList.innerHTML = '<p class="empty-message">No customers yet.</p>';
+        return;
+    }
+
+    customers.forEach(function (customer, index) {
+
+        const card = document.createElement("div");
+        card.className = "customer-card";
+
+        const name = typeof customer === "string"
+            ? customer
+            : customer.name;
+
+        const phone = typeof customer === "string"
+            ? ""
+            : customer.phone;
+
+        card.innerHTML = `
+            <h3>${escapeHTML(name)}</h3>
+            ${phone ? `<p>📞 ${escapeHTML(phone)}</p>` : ""}
+            <button class="delete-btn" data-customer="${index}">
+                Delete
+            </button>
+        `;
+
+        customersList.appendChild(card);
+    });
+
+    document.querySelectorAll("[data-customer]").forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const index = Number(button.dataset.customer);
+
+            customers.splice(index, 1);
+
+            saveData();
+            updateDashboard();
+            displayCustomers();
+        });
+    });
+}
+
+
+function displayServices() {
+    servicesList.innerHTML = "";
+
+    if (services.length === 0) {
+        servicesList.innerHTML = '<p class="empty-message">No services yet.</p>';
+        return;
+    }
+
+    services.forEach(function (service, index) {
+
+        const card = document.createElement("div");
+        card.className = "service-card";
+
+        const name = typeof service === "string"
+            ? service
+            : service.name;
+
+        const price = typeof service === "string"
+            ? ""
+            : service.price;
+
+        const duration = typeof service === "string"
+            ? ""
+            : service.duration;
+
+        card.innerHTML = `
+            <h3>${escapeHTML(name)}</h3>
+            ${price ? `<p>💰 R${escapeHTML(String(price))}</p>` : ""}
+            ${duration ? `<p>⏱️ ${escapeHTML(String(duration))} minutes</p>` : ""}
+            <button class="delete-btn" data-service="${index}">
+                Delete
+            </button>
+        `;
+
+        servicesList.appendChild(card);
+    });
+
+    document.querySelectorAll("[data-service]").forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const index = Number(button.dataset.service);
+
+            services.splice(index, 1);
+
+            saveData();
+            updateDashboard();
+            displayServices();
+        });
+    });
 }
 
 
@@ -67,18 +152,14 @@ function displayAppointments() {
     appointmentsList.innerHTML = "";
 
     if (appointments.length === 0) {
-
         appointmentsList.innerHTML =
             '<p class="empty-message">No appointments yet.</p>';
-
         return;
     }
 
     appointments.forEach(function (appointment, index) {
 
-        const card =
-            document.createElement("div");
-
+        const card = document.createElement("div");
         card.className = "appointment-card";
 
         card.innerHTML = `
@@ -86,7 +167,8 @@ function displayAppointments() {
             <p><strong>Service:</strong> ${escapeHTML(appointment.serviceName)}</p>
             <p><strong>Date:</strong> ${escapeHTML(appointment.date)}</p>
             <p><strong>Time:</strong> ${escapeHTML(appointment.time)}</p>
-            <button class="delete-btn" data-index="${index}">
+
+            <button class="delete-btn" data-appointment="${index}">
                 Delete
             </button>
         `;
@@ -94,207 +176,359 @@ function displayAppointments() {
         appointmentsList.appendChild(card);
     });
 
-    document
-        .querySelectorAll(".delete-btn")
-        .forEach(function (button) {
+    document.querySelectorAll("[data-appointment]").forEach(function (button) {
 
-            button.addEventListener("click", function () {
+        button.addEventListener("click", function () {
 
-                const index =
-                    Number(button.dataset.index);
+            const index = Number(button.dataset.appointment);
 
-                appointments.splice(index, 1);
+            appointments.splice(index, 1);
 
-                saveData();
-                updateDashboard();
-                displayAppointments();
-            });
+            saveData();
+            updateDashboard();
+            displayAppointments();
         });
+    });
 }
 
 
-function escapeHTML(value) {
+// APPOINTMENT
 
-    const div =
-        document.createElement("div");
+addAppointmentBtn.addEventListener("click", function () {
 
-    div.textContent = value;
+    appointmentModal.classList.remove("hidden");
 
-    return div.innerHTML;
-}
+    const dateInput = document.getElementById("appointmentDate");
 
-
-addAppointmentBtn.addEventListener(
-    "click",
-    function () {
-
-        appointmentModal.classList.remove("hidden");
-
-        document
-            .getElementById("appointmentDate")
-            .valueAsDate = new Date();
-    }
-);
+    dateInput.valueAsDate = new Date();
+});
 
 
-closeModalBtn.addEventListener(
-    "click",
-    function () {
+closeModalBtn.addEventListener("click", function () {
+
+    appointmentModal.classList.add("hidden");
+
+    appointmentForm.reset();
+});
+
+
+appointmentModal.addEventListener("click", function (event) {
+
+    if (event.target === appointmentModal) {
 
         appointmentModal.classList.add("hidden");
 
         appointmentForm.reset();
     }
-);
+});
 
 
-appointmentModal.addEventListener(
-    "click",
-    function (event) {
+appointmentForm.addEventListener("submit", function (event) {
 
-        if (event.target === appointmentModal) {
+    event.preventDefault();
 
-            appointmentModal.classList.add("hidden");
+    const customerName =
+        document.getElementById("customerName").value.trim();
 
-            appointmentForm.reset();
-        }
+    const serviceName =
+        document.getElementById("serviceName").value.trim();
+
+    const date =
+        document.getElementById("appointmentDate").value;
+
+    const time =
+        document.getElementById("appointmentTime").value;
+
+
+    if (!customerName || !serviceName || !date || !time) {
+
+        alert("Please complete all fields.");
+
+        return;
     }
-);
 
 
-appointmentForm.addEventListener(
-    "submit",
-    function (event) {
-
-        event.preventDefault();
-
-        const customerName =
-            document
-                .getElementById("customerName")
-                .value
-                .trim();
-
-        const serviceName =
-            document
-                .getElementById("serviceName")
-                .value
-                .trim();
-
-        const date =
-            document
-                .getElementById("appointmentDate")
-                .value;
-
-        const time =
-            document
-                .getElementById("appointmentTime")
-                .value;
+    appointments.push({
+        id: Date.now(),
+        customerName: customerName,
+        serviceName: serviceName,
+        date: date,
+        time: time
+    });
 
 
-        if (
-            !customerName ||
-            !serviceName ||
-            !date ||
-            !time
-        ) {
-            alert("Please complete all fields.");
-            return;
-        }
+    if (!customers.some(function (customer) {
 
+        const name = typeof customer === "string"
+            ? customer
+            : customer.name;
 
-        const appointment = {
+        return name.toLowerCase() === customerName.toLowerCase();
 
-            id: Date.now(),
+    })) {
 
-            customerName:
-                customerName,
-
-            serviceName:
-                serviceName,
-
-            date:
-                date,
-
-            time:
-                time
-        };
-
-
-        appointments.push(appointment);
-
-
-        if (
-            !customers.some(
-                function (customer) {
-                    return customer === customerName;
-                }
-            )
-        ) {
-            customers.push(customerName);
-        }
-
-
-        if (
-            !services.some(
-                function (service) {
-                    return service === serviceName;
-                }
-            )
-        ) {
-            services.push(serviceName);
-        }
-
-
-        saveData();
-
-        updateDashboard();
-
-        displayAppointments();
-
-
-        appointmentForm.reset();
-
-        appointmentModal.classList.add("hidden");
-
-
-        alert("Appointment saved successfully!");
+        customers.push({
+            name: customerName,
+            phone: ""
+        });
     }
-);
 
 
-clearAppointmentsBtn.addEventListener(
-    "click",
-    function () {
+    if (!services.some(function (service) {
 
-        if (appointments.length === 0) {
-            alert("There are no appointments to clear.");
-            return;
-        }
+        const name = typeof service === "string"
+            ? service
+            : service.name;
 
+        return name.toLowerCase() === serviceName.toLowerCase();
 
-        const confirmed =
-            confirm(
-                "Are you sure you want to delete all appointments?"
-            );
+    })) {
 
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        appointments = [];
-
-        saveData();
-
-        updateDashboard();
-
-        displayAppointments();
+        services.push({
+            name: serviceName,
+            price: "",
+            duration: ""
+        });
     }
-);
 
+
+    saveData();
+
+    updateDashboard();
+    displayCustomers();
+    displayServices();
+    displayAppointments();
+
+    appointmentForm.reset();
+
+    appointmentModal.classList.add("hidden");
+
+    alert("Appointment saved successfully!");
+});
+
+
+// CUSTOMER
+
+addCustomerBtn.addEventListener("click", function () {
+
+    customerModal.classList.remove("hidden");
+
+});
+
+
+closeCustomerModalBtn.addEventListener("click", function () {
+
+    customerModal.classList.add("hidden");
+
+    customerForm.reset();
+
+});
+
+
+customerModal.addEventListener("click", function (event) {
+
+    if (event.target === customerModal) {
+
+        customerModal.classList.add("hidden");
+
+        customerForm.reset();
+
+    }
+
+});
+
+
+customerForm.addEventListener("submit", function (event) {
+
+    event.preventDefault();
+
+    const name =
+        document.getElementById("newCustomerName").value.trim();
+
+    const phone =
+        document.getElementById("customerPhone").value.trim();
+
+
+    if (!name) {
+
+        alert("Please enter the customer's name.");
+
+        return;
+    }
+
+
+    const alreadyExists =
+        customers.some(function (customer) {
+
+            const customerName = typeof customer === "string"
+                ? customer
+                : customer.name;
+
+            return customerName.toLowerCase() === name.toLowerCase();
+
+        });
+
+
+    if (alreadyExists) {
+
+        alert("This customer already exists.");
+
+        return;
+    }
+
+
+    customers.push({
+        name: name,
+        phone: phone
+    });
+
+
+    saveData();
+
+    updateDashboard();
+
+    displayCustomers();
+
+    customerForm.reset();
+
+    customerModal.classList.add("hidden");
+
+    alert("Customer saved successfully!");
+
+});
+
+
+// SERVICE
+
+addServiceBtn.addEventListener("click", function () {
+
+    serviceModal.classList.remove("hidden");
+
+});
+
+
+closeServiceModalBtn.addEventListener("click", function () {
+
+    serviceModal.classList.add("hidden");
+
+    serviceForm.reset();
+
+});
+
+
+serviceModal.addEventListener("click", function (event) {
+
+    if (event.target === serviceModal) {
+
+        serviceModal.classList.add("hidden");
+
+        serviceForm.reset();
+
+    }
+
+});
+
+
+serviceForm.addEventListener("submit", function (event) {
+
+    event.preventDefault();
+
+    const name =
+        document.getElementById("newServiceName").value.trim();
+
+    const price =
+        document.getElementById("servicePrice").value;
+
+    const duration =
+        document.getElementById("serviceDuration").value;
+
+
+    if (!name || !price || !duration) {
+
+        alert("Please complete all service fields.");
+
+        return;
+    }
+
+
+    const alreadyExists =
+        services.some(function (service) {
+
+            const serviceName = typeof service === "string"
+                ? service
+                : service.name;
+
+            return serviceName.toLowerCase() === name.toLowerCase();
+
+        });
+
+
+    if (alreadyExists) {
+
+        alert("This service already exists.");
+
+        return;
+    }
+
+
+    services.push({
+        name: name,
+        price: price,
+        duration: duration
+    });
+
+
+    saveData();
+
+    updateDashboard();
+
+    displayServices();
+
+    serviceForm.reset();
+
+    serviceModal.classList.add("hidden");
+
+    alert("Service saved successfully!");
+
+});
+
+
+// CLEAR APPOINTMENTS
+
+clearAppointmentsBtn.addEventListener("click", function () {
+
+    if (appointments.length === 0) {
+
+        alert("There are no appointments to clear.");
+
+        return;
+    }
+
+
+    if (!confirm("Are you sure you want to delete all appointments?")) {
+        return;
+    }
+
+
+    appointments = [];
+
+    saveData();
+
+    updateDashboard();
+
+    displayAppointments();
+
+});
+
+
+// START APP
 
 updateDashboard();
+
+displayCustomers();
+
+displayServices();
+
 displayAppointments();
 
 }); 
