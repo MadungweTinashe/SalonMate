@@ -1,534 +1,833 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-let appointments = JSON.parse(localStorage.getItem("salonMateAppointments")) || [];
-let customers = JSON.parse(localStorage.getItem("salonMateCustomers")) || [];
-let services = JSON.parse(localStorage.getItem("salonMateServices")) || [];
+    let appointments =
+        JSON.parse(localStorage.getItem("salonMateAppointments")) || [];
 
-const addAppointmentBtn = document.getElementById("addAppointmentBtn");
-const appointmentModal = document.getElementById("appointmentModal");
-const closeModalBtn = document.getElementById("closeModalBtn");
-const appointmentForm = document.getElementById("appointmentForm");
+    let customers =
+        JSON.parse(localStorage.getItem("salonMateCustomers")) || [];
 
-const addCustomerBtn = document.getElementById("addCustomerBtn");
-const customerModal = document.getElementById("customerModal");
-const closeCustomerModalBtn = document.getElementById("closeCustomerModalBtn");
-const customerForm = document.getElementById("customerForm");
-
-const addServiceBtn = document.getElementById("addServiceBtn");
-const serviceModal = document.getElementById("serviceModal");
-const closeServiceModalBtn = document.getElementById("closeServiceModalBtn");
-const serviceForm = document.getElementById("serviceForm");
-
-const appointmentsList = document.getElementById("appointmentsList");
-const customersList = document.getElementById("customersList");
-const servicesList = document.getElementById("servicesList");
-const clearAppointmentsBtn = document.getElementById("clearAppointmentsBtn");
+    let services =
+        JSON.parse(localStorage.getItem("salonMateServices")) || [];
 
 
-function saveData() {
-    localStorage.setItem("salonMateAppointments", JSON.stringify(appointments));
-    localStorage.setItem("salonMateCustomers", JSON.stringify(customers));
-    localStorage.setItem("salonMateServices", JSON.stringify(services));
-}
+    // ELEMENTS
+
+    const addAppointmentBtn =
+        document.getElementById("addAppointmentBtn");
+
+    const appointmentModal =
+        document.getElementById("appointmentModal");
+
+    const closeModalBtn =
+        document.getElementById("closeModalBtn");
+
+    const appointmentForm =
+        document.getElementById("appointmentForm");
 
 
-function escapeHTML(value) {
-    const div = document.createElement("div");
-    div.textContent = value;
-    return div.innerHTML;
-}
+    const addCustomerBtn =
+        document.getElementById("addCustomerBtn");
+
+    const customerModal =
+        document.getElementById("customerModal");
+
+    const closeCustomerModalBtn =
+        document.getElementById("closeCustomerModalBtn");
+
+    const customerForm =
+        document.getElementById("customerForm");
 
 
-function updateDashboard() {
-    document.getElementById("totalAppointments").textContent = appointments.length;
-    document.getElementById("totalCustomers").textContent = customers.length;
-    document.getElementById("totalServices").textContent = services.length;
-}
+    const addServiceBtn =
+        document.getElementById("addServiceBtn");
+
+    const serviceModal =
+        document.getElementById("serviceModal");
+
+    const closeServiceModalBtn =
+        document.getElementById("closeServiceModalBtn");
+
+    const serviceForm =
+        document.getElementById("serviceForm");
 
 
-function displayCustomers() {
-    customersList.innerHTML = "";
+    const appointmentsList =
+        document.getElementById("appointmentsList");
 
-    if (customers.length === 0) {
-        customersList.innerHTML = '<p class="empty-message">No customers yet.</p>';
-        return;
+    const customersList =
+        document.getElementById("customersList");
+
+    const servicesList =
+        document.getElementById("servicesList");
+
+    const clearAppointmentsBtn =
+        document.getElementById("clearAppointmentsBtn");
+
+
+    const customerSelect =
+        document.getElementById("customerName");
+
+    const serviceSelect =
+        document.getElementById("serviceName");
+
+
+    // SAVE DATA
+
+    function saveData() {
+
+        localStorage.setItem(
+            "salonMateAppointments",
+            JSON.stringify(appointments)
+        );
+
+        localStorage.setItem(
+            "salonMateCustomers",
+            JSON.stringify(customers)
+        );
+
+        localStorage.setItem(
+            "salonMateServices",
+            JSON.stringify(services)
+        );
     }
 
-    customers.forEach(function (customer, index) {
 
-        const card = document.createElement("div");
-        card.className = "customer-card";
+    // ESCAPE HTML
 
-        const name = typeof customer === "string"
-            ? customer
-            : customer.name;
+    function escapeHTML(value) {
 
-        const phone = typeof customer === "string"
-            ? ""
-            : customer.phone;
+        const div = document.createElement("div");
 
-        card.innerHTML = `
-            <h3>${escapeHTML(name)}</h3>
-            ${phone ? `<p>📞 ${escapeHTML(phone)}</p>` : ""}
-            <button class="delete-btn" data-customer="${index}">
-                Delete
-            </button>
-        `;
+        div.textContent = value;
 
-        customersList.appendChild(card);
-    });
+        return div.innerHTML;
+    }
 
-    document.querySelectorAll("[data-customer]").forEach(function (button) {
 
-        button.addEventListener("click", function () {
+    // DASHBOARD
 
-            const index = Number(button.dataset.customer);
+    function updateDashboard() {
 
-            customers.splice(index, 1);
+        document.getElementById("totalAppointments").textContent =
+            appointments.length;
 
-            saveData();
-            updateDashboard();
-            displayCustomers();
+        document.getElementById("totalCustomers").textContent =
+            customers.length;
+
+        document.getElementById("totalServices").textContent =
+            services.length;
+    }
+
+
+    // CUSTOMER DROPDOWN
+
+    function updateCustomerSelect() {
+
+        customerSelect.innerHTML =
+            '<option value="">Select customer</option>';
+
+        customers.forEach(function (customer) {
+
+            const name =
+                typeof customer === "string"
+                    ? customer
+                    : customer.name;
+
+            const option =
+                document.createElement("option");
+
+            option.value = name;
+
+            option.textContent = name;
+
+            customerSelect.appendChild(option);
         });
-    });
-}
-
-
-function displayServices() {
-    servicesList.innerHTML = "";
-
-    if (services.length === 0) {
-        servicesList.innerHTML = '<p class="empty-message">No services yet.</p>';
-        return;
     }
 
-    services.forEach(function (service, index) {
 
-        const card = document.createElement("div");
-        card.className = "service-card";
+    // SERVICE DROPDOWN
 
-        const name = typeof service === "string"
-            ? service
-            : service.name;
+    function updateServiceSelect() {
 
-        const price = typeof service === "string"
-            ? ""
-            : service.price;
+        serviceSelect.innerHTML =
+            '<option value="">Select service</option>';
 
-        const duration = typeof service === "string"
-            ? ""
-            : service.duration;
+        services.forEach(function (service) {
 
-        card.innerHTML = `
-            <h3>${escapeHTML(name)}</h3>
-            ${price ? `<p>💰 R${escapeHTML(String(price))}</p>` : ""}
-            ${duration ? `<p>⏱️ ${escapeHTML(String(duration))} minutes</p>` : ""}
-            <button class="delete-btn" data-service="${index}">
-                Delete
-            </button>
-        `;
+            const name =
+                typeof service === "string"
+                    ? service
+                    : service.name;
 
-        servicesList.appendChild(card);
-    });
+            const option =
+                document.createElement("option");
 
-    document.querySelectorAll("[data-service]").forEach(function (button) {
+            option.value = name;
 
-        button.addEventListener("click", function () {
+            option.textContent = name;
 
-            const index = Number(button.dataset.service);
-
-            services.splice(index, 1);
-
-            saveData();
-            updateDashboard();
-            displayServices();
+            serviceSelect.appendChild(option);
         });
-    });
-}
-
-
-function displayAppointments() {
-
-    appointmentsList.innerHTML = "";
-
-    if (appointments.length === 0) {
-        appointmentsList.innerHTML =
-            '<p class="empty-message">No appointments yet.</p>';
-        return;
     }
 
-    appointments.forEach(function (appointment, index) {
 
-        const card = document.createElement("div");
-        card.className = "appointment-card";
+    // DISPLAY CUSTOMERS
 
-        card.innerHTML = `
-            <h3>${escapeHTML(appointment.customerName)}</h3>
-            <p><strong>Service:</strong> ${escapeHTML(appointment.serviceName)}</p>
-            <p><strong>Date:</strong> ${escapeHTML(appointment.date)}</p>
-            <p><strong>Time:</strong> ${escapeHTML(appointment.time)}</p>
+    function displayCustomers() {
 
-            <button class="delete-btn" data-appointment="${index}">
-                Delete
-            </button>
-        `;
+        customersList.innerHTML = "";
 
-        appointmentsList.appendChild(card);
-    });
+        if (customers.length === 0) {
 
-    document.querySelectorAll("[data-appointment]").forEach(function (button) {
+            customersList.innerHTML =
+                '<p class="empty-message">No customers yet.</p>';
 
-        button.addEventListener("click", function () {
+            return;
+        }
 
-            const index = Number(button.dataset.appointment);
+        customers.forEach(function (customer, index) {
 
-            appointments.splice(index, 1);
+            const card =
+                document.createElement("div");
+
+            card.className = "customer-card";
+
+            const name =
+                typeof customer === "string"
+                    ? customer
+                    : customer.name;
+
+            const phone =
+                typeof customer === "string"
+                    ? ""
+                    : customer.phone;
+
+            card.innerHTML = `
+                <h3>${escapeHTML(name)}</h3>
+
+                ${phone
+                    ? `<p>📞 ${escapeHTML(phone)}</p>`
+                    : ""
+                }
+
+                <button
+                    class="delete-btn"
+                    data-customer="${index}">
+                    Delete
+                </button>
+            `;
+
+            customersList.appendChild(card);
+        });
+
+
+        document
+            .querySelectorAll("[data-customer]")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const index =
+                            Number(button.dataset.customer);
+
+                        customers.splice(index, 1);
+
+                        saveData();
+
+                        updateDashboard();
+
+                        displayCustomers();
+
+                        updateCustomerSelect();
+                    }
+                );
+            });
+    }
+
+
+    // DISPLAY SERVICES
+
+    function displayServices() {
+
+        servicesList.innerHTML = "";
+
+        if (services.length === 0) {
+
+            servicesList.innerHTML =
+                '<p class="empty-message">No services yet.</p>';
+
+            return;
+        }
+
+        services.forEach(function (service, index) {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "service-card";
+
+            const name =
+                typeof service === "string"
+                    ? service
+                    : service.name;
+
+            const price =
+                typeof service === "string"
+                    ? ""
+                    : service.price;
+
+            const duration =
+                typeof service === "string"
+                    ? ""
+                    : service.duration;
+
+            card.innerHTML = `
+                <h3>${escapeHTML(name)}</h3>
+
+                ${price
+                    ? `<p>💰 R${escapeHTML(String(price))}</p>`
+                    : ""
+                }
+
+                ${duration
+                    ? `<p>⏱️ ${escapeHTML(String(duration))} minutes</p>`
+                    : ""
+                }
+
+                <button
+                    class="delete-btn"
+                    data-service="${index}">
+                    Delete
+                </button>
+            `;
+
+            servicesList.appendChild(card);
+        });
+
+
+        document
+            .querySelectorAll("[data-service]")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const index =
+                            Number(button.dataset.service);
+
+                        services.splice(index, 1);
+
+                        saveData();
+
+                        updateDashboard();
+
+                        displayServices();
+
+                        updateServiceSelect();
+                    }
+                );
+            });
+    }
+
+
+    // DISPLAY APPOINTMENTS
+
+    function displayAppointments() {
+
+        appointmentsList.innerHTML = "";
+
+        if (appointments.length === 0) {
+
+            appointmentsList.innerHTML =
+                '<p class="empty-message">No appointments yet.</p>';
+
+            return;
+        }
+
+        appointments.forEach(function (appointment, index) {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "appointment-card";
+
+            card.innerHTML = `
+                <h3>
+                    ${escapeHTML(appointment.customerName)}
+                </h3>
+
+                <p>
+                    <strong>Service:</strong>
+                    ${escapeHTML(appointment.serviceName)}
+                </p>
+
+                <p>
+                    <strong>Date:</strong>
+                    ${escapeHTML(appointment.date)}
+                </p>
+
+                <p>
+                    <strong>Time:</strong>
+                    ${escapeHTML(appointment.time)}
+                </p>
+
+                <button
+                    class="delete-btn"
+                    data-appointment="${index}">
+                    Delete
+                </button>
+            `;
+
+            appointmentsList.appendChild(card);
+        });
+
+
+        document
+            .querySelectorAll("[data-appointment]")
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const index =
+                            Number(button.dataset.appointment);
+
+                        appointments.splice(index, 1);
+
+                        saveData();
+
+                        updateDashboard();
+
+                        displayAppointments();
+                    }
+                );
+            });
+    }
+
+
+    // OPEN APPOINTMENT
+
+    addAppointmentBtn.addEventListener(
+        "click",
+        function () {
+
+            updateCustomerSelect();
+
+            updateServiceSelect();
+
+            appointmentModal.classList.remove("hidden");
+
+            document.getElementById(
+                "appointmentDate"
+            ).valueAsDate = new Date();
+        }
+    );
+
+
+    // CLOSE APPOINTMENT
+
+    closeModalBtn.addEventListener(
+        "click",
+        function () {
+
+            appointmentModal.classList.add("hidden");
+
+            appointmentForm.reset();
+        }
+    );
+
+
+    appointmentModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (event.target === appointmentModal) {
+
+                appointmentModal.classList.add("hidden");
+
+                appointmentForm.reset();
+            }
+        }
+    );
+
+
+    // SAVE APPOINTMENT
+
+    appointmentForm.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+            const customerName =
+                customerSelect.value;
+
+            const serviceName =
+                serviceSelect.value;
+
+            const date =
+                document.getElementById(
+                    "appointmentDate"
+                ).value;
+
+            const time =
+                document.getElementById(
+                    "appointmentTime"
+                ).value;
+
+
+            if (
+                !customerName ||
+                !serviceName ||
+                !date ||
+                !time
+            ) {
+
+                alert(
+                    "Please select a customer, select a service, and complete the date and time."
+                );
+
+                return;
+            }
+
+
+            appointments.push({
+
+                id: Date.now(),
+
+                customerName: customerName,
+
+                serviceName: serviceName,
+
+                date: date,
+
+                time: time
+            });
+
 
             saveData();
+
             updateDashboard();
+
             displayAppointments();
-        });
-    });
-}
+
+            appointmentForm.reset();
+
+            appointmentModal.classList.add("hidden");
+
+            alert(
+                "Appointment saved successfully!"
+            );
+        }
+    );
 
 
-// APPOINTMENT
+    // OPEN CUSTOMER
 
-addAppointmentBtn.addEventListener("click", function () {
+    addCustomerBtn.addEventListener(
+        "click",
+        function () {
 
-    appointmentModal.classList.remove("hidden");
-
-    const dateInput = document.getElementById("appointmentDate");
-
-    dateInput.valueAsDate = new Date();
-});
-
-
-closeModalBtn.addEventListener("click", function () {
-
-    appointmentModal.classList.add("hidden");
-
-    appointmentForm.reset();
-});
+            customerModal.classList.remove("hidden");
+        }
+    );
 
 
-appointmentModal.addEventListener("click", function (event) {
+    // CLOSE CUSTOMER
 
-    if (event.target === appointmentModal) {
+    closeCustomerModalBtn.addEventListener(
+        "click",
+        function () {
 
-        appointmentModal.classList.add("hidden");
+            customerModal.classList.add("hidden");
 
-        appointmentForm.reset();
-    }
-});
-
-
-appointmentForm.addEventListener("submit", function (event) {
-
-    event.preventDefault();
-
-    const customerName =
-        document.getElementById("customerName").value.trim();
-
-    const serviceName =
-        document.getElementById("serviceName").value.trim();
-
-    const date =
-        document.getElementById("appointmentDate").value;
-
-    const time =
-        document.getElementById("appointmentTime").value;
+            customerForm.reset();
+        }
+    );
 
 
-    if (!customerName || !serviceName || !date || !time) {
+    customerModal.addEventListener(
+        "click",
+        function (event) {
 
-        alert("Please complete all fields.");
+            if (event.target === customerModal) {
 
-        return;
-    }
+                customerModal.classList.add("hidden");
 
-
-    appointments.push({
-        id: Date.now(),
-        customerName: customerName,
-        serviceName: serviceName,
-        date: date,
-        time: time
-    });
+                customerForm.reset();
+            }
+        }
+    );
 
 
-    if (!customers.some(function (customer) {
+    // SAVE CUSTOMER
 
-        const name = typeof customer === "string"
-            ? customer
-            : customer.name;
+    customerForm.addEventListener(
+        "submit",
+        function (event) {
 
-        return name.toLowerCase() === customerName.toLowerCase();
+            event.preventDefault();
 
-    })) {
+            const name =
+                document.getElementById(
+                    "newCustomerName"
+                ).value.trim();
 
-        customers.push({
-            name: customerName,
-            phone: ""
-        });
-    }
-
-
-    if (!services.some(function (service) {
-
-        const name = typeof service === "string"
-            ? service
-            : service.name;
-
-        return name.toLowerCase() === serviceName.toLowerCase();
-
-    })) {
-
-        services.push({
-            name: serviceName,
-            price: "",
-            duration: ""
-        });
-    }
+            const phone =
+                document.getElementById(
+                    "customerPhone"
+                ).value.trim();
 
 
-    saveData();
+            if (!name) {
+
+                alert(
+                    "Please enter the customer's name."
+                );
+
+                return;
+            }
+
+
+            const alreadyExists =
+                customers.some(
+                    function (customer) {
+
+                        const customerName =
+                            typeof customer === "string"
+                                ? customer
+                                : customer.name;
+
+                        return (
+                            customerName.toLowerCase() ===
+                            name.toLowerCase()
+                        );
+                    }
+                );
+
+
+            if (alreadyExists) {
+
+                alert(
+                    "This customer already exists."
+                );
+
+                return;
+            }
+
+
+            customers.push({
+
+                name: name,
+
+                phone: phone
+            });
+
+
+            saveData();
+
+            updateDashboard();
+
+            displayCustomers();
+
+            updateCustomerSelect();
+
+            customerForm.reset();
+
+            customerModal.classList.add("hidden");
+
+            alert(
+                "Customer saved successfully!"
+            );
+        }
+    );
+
+
+    // OPEN SERVICE
+
+    addServiceBtn.addEventListener(
+        "click",
+        function () {
+
+            serviceModal.classList.remove("hidden");
+        }
+    );
+
+
+    // CLOSE SERVICE
+
+    closeServiceModalBtn.addEventListener(
+        "click",
+        function () {
+
+            serviceModal.classList.add("hidden");
+
+            serviceForm.reset();
+        }
+    );
+
+
+    serviceModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (event.target === serviceModal) {
+
+                serviceModal.classList.add("hidden");
+
+                serviceForm.reset();
+            }
+        }
+    );
+
+
+    // SAVE SERVICE
+
+    serviceForm.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+            const name =
+                document.getElementById(
+                    "newServiceName"
+                ).value.trim();
+
+            const price =
+                document.getElementById(
+                    "servicePrice"
+                ).value;
+
+            const duration =
+                document.getElementById(
+                    "serviceDuration"
+                ).value;
+
+
+            if (
+                !name ||
+                !price ||
+                !duration
+            ) {
+
+                alert(
+                    "Please complete all service fields."
+                );
+
+                return;
+            }
+
+
+            const alreadyExists =
+                services.some(
+                    function (service) {
+
+                        const serviceName =
+                            typeof service === "string"
+                                ? service
+                                : service.name;
+
+                        return (
+                            serviceName.toLowerCase() ===
+                            name.toLowerCase()
+                        );
+                    }
+                );
+
+
+            if (alreadyExists) {
+
+                alert(
+                    "This service already exists."
+                );
+
+                return;
+            }
+
+
+            services.push({
+
+                name: name,
+
+                price: price,
+
+                duration: duration
+            });
+
+
+            saveData();
+
+            updateDashboard();
+
+            displayServices();
+
+            updateServiceSelect();
+
+            serviceForm.reset();
+
+            serviceModal.classList.add("hidden");
+
+            alert(
+                "Service saved successfully!"
+            );
+        }
+    );
+
+
+    // CLEAR APPOINTMENTS
+
+    clearAppointmentsBtn.addEventListener(
+        "click",
+        function () {
+
+            if (appointments.length === 0) {
+
+                alert(
+                    "There are no appointments to clear."
+                );
+
+                return;
+            }
+
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete all appointments?"
+                )
+            ) {
+
+                return;
+            }
+
+
+            appointments = [];
+
+            saveData();
+
+            updateDashboard();
+
+            displayAppointments();
+        }
+    );
+
+
+    // START APP
 
     updateDashboard();
+
     displayCustomers();
-    displayServices();
-    displayAppointments();
-
-    appointmentForm.reset();
-
-    appointmentModal.classList.add("hidden");
-
-    alert("Appointment saved successfully!");
-});
-
-
-// CUSTOMER
-
-addCustomerBtn.addEventListener("click", function () {
-
-    customerModal.classList.remove("hidden");
-
-});
-
-
-closeCustomerModalBtn.addEventListener("click", function () {
-
-    customerModal.classList.add("hidden");
-
-    customerForm.reset();
-
-});
-
-
-customerModal.addEventListener("click", function (event) {
-
-    if (event.target === customerModal) {
-
-        customerModal.classList.add("hidden");
-
-        customerForm.reset();
-
-    }
-
-});
-
-
-customerForm.addEventListener("submit", function (event) {
-
-    event.preventDefault();
-
-    const name =
-        document.getElementById("newCustomerName").value.trim();
-
-    const phone =
-        document.getElementById("customerPhone").value.trim();
-
-
-    if (!name) {
-
-        alert("Please enter the customer's name.");
-
-        return;
-    }
-
-
-    const alreadyExists =
-        customers.some(function (customer) {
-
-            const customerName = typeof customer === "string"
-                ? customer
-                : customer.name;
-
-            return customerName.toLowerCase() === name.toLowerCase();
-
-        });
-
-
-    if (alreadyExists) {
-
-        alert("This customer already exists.");
-
-        return;
-    }
-
-
-    customers.push({
-        name: name,
-        phone: phone
-    });
-
-
-    saveData();
-
-    updateDashboard();
-
-    displayCustomers();
-
-    customerForm.reset();
-
-    customerModal.classList.add("hidden");
-
-    alert("Customer saved successfully!");
-
-});
-
-
-// SERVICE
-
-addServiceBtn.addEventListener("click", function () {
-
-    serviceModal.classList.remove("hidden");
-
-});
-
-
-closeServiceModalBtn.addEventListener("click", function () {
-
-    serviceModal.classList.add("hidden");
-
-    serviceForm.reset();
-
-});
-
-
-serviceModal.addEventListener("click", function (event) {
-
-    if (event.target === serviceModal) {
-
-        serviceModal.classList.add("hidden");
-
-        serviceForm.reset();
-
-    }
-
-});
-
-
-serviceForm.addEventListener("submit", function (event) {
-
-    event.preventDefault();
-
-    const name =
-        document.getElementById("newServiceName").value.trim();
-
-    const price =
-        document.getElementById("servicePrice").value;
-
-    const duration =
-        document.getElementById("serviceDuration").value;
-
-
-    if (!name || !price || !duration) {
-
-        alert("Please complete all service fields.");
-
-        return;
-    }
-
-
-    const alreadyExists =
-        services.some(function (service) {
-
-            const serviceName = typeof service === "string"
-                ? service
-                : service.name;
-
-            return serviceName.toLowerCase() === name.toLowerCase();
-
-        });
-
-
-    if (alreadyExists) {
-
-        alert("This service already exists.");
-
-        return;
-    }
-
-
-    services.push({
-        name: name,
-        price: price,
-        duration: duration
-    });
-
-
-    saveData();
-
-    updateDashboard();
 
     displayServices();
-
-    serviceForm.reset();
-
-    serviceModal.classList.add("hidden");
-
-    alert("Service saved successfully!");
-
-});
-
-
-// CLEAR APPOINTMENTS
-
-clearAppointmentsBtn.addEventListener("click", function () {
-
-    if (appointments.length === 0) {
-
-        alert("There are no appointments to clear.");
-
-        return;
-    }
-
-
-    if (!confirm("Are you sure you want to delete all appointments?")) {
-        return;
-    }
-
-
-    appointments = [];
-
-    saveData();
-
-    updateDashboard();
 
     displayAppointments();
 
+    updateCustomerSelect();
+
+    updateServiceSelect();
+
 });
-
-
-// START APP
-
-updateDashboard();
-
-displayCustomers();
-
-displayServices();
-
-displayAppointments();
-
-}); 
