@@ -453,88 +453,92 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     );
+// SAVE APPOINTMENT
+
+appointmentForm.addEventListener(
+    "submit",
+    function (event) {
+
+        event.preventDefault();
+
+        const customerName =
+            customerSelect.value;
+
+        const serviceName =
+            serviceSelect.value;
+
+        const date =
+            document.getElementById("appointmentDate").value;
+
+        const time =
+            document.getElementById("appointmentTime").value;
 
 
-    // SAVE APPOINTMENT
-
-    appointmentForm.addEventListener(
-        "submit",
-        function (event) {
-
-            event.preventDefault();
-
-            const customerName =
-                customerSelect.value;
-
-            const serviceName =
-                serviceSelect.value;
-
-            const date =
-                document.getElementById(
-                    "appointmentDate"
-                ).value;
-
-            const time =
-                document.getElementById(
-                    "appointmentTime"
-                ).value;
+        if (
+            !customerName ||
+            !serviceName ||
+            !date ||
+            !time
+        ) {
+            alert(
+                "Please select a customer, select a service, and complete the date and time."
+            );
+            return;
+        }
 
 
-            if (
-                !customerName ||
-                !serviceName ||
-                !date ||
-                !time
-            ) {
-const alreadyBooked = appointments.some(function (appointment) {
-    return (
-        appointment.date === date &&
-        appointment.time === time
-    );
-});
+        const alreadyBooked = appointments.some(
+            function (appointment) {
 
-if (alreadyBooked) {
-    alert("This time is already booked. Please choose another time.");
-    return;
-} 
-                alert(
-                    "Please select a customer, select a service, and complete the date and time."
+                return (
+                    appointment.date === date &&
+                    appointment.time === time
                 );
-
-                return;
             }
+        );
 
 
-            appointments.push({
-
-                id: Date.now(),
-
-                customerName: customerName,
-
-                serviceName: serviceName,
-
-                date: date,
-
-                time: time
-            });
-
-
-            saveData();
-
-            updateDashboard();
-
-            displayAppointments();
-
-            appointmentForm.reset();
-
-            appointmentModal.classList.add("hidden");
+        if (alreadyBooked) {
 
             alert(
-                "Appointment saved successfully!"
+                "This time is already booked. Please choose another time."
             );
-        }
-    );
 
+            return;
+        }
+
+
+        appointments.push({
+
+            id: Date.now(),
+
+            customerName: customerName,
+
+            serviceName: serviceName,
+
+            date: date,
+
+            time: time
+        });
+
+
+        saveData();
+
+        updateDashboard();
+
+        displayAppointments();
+
+        appointmentForm.reset();
+
+        appointmentModal.classList.add("hidden");
+
+        alert(
+            "Appointment saved successfully!"
+        );
+    }
+); 
+
+    
 
     // OPEN CUSTOMER
 
