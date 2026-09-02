@@ -1,24 +1,37 @@
-// ========================================
-// SALONMATE
-// ========================================
+document.addEventListener("DOMContentLoaded", function () {
 
-// Load saved data
-let appointments =
-    JSON.parse(localStorage.getItem("salonMateAppointments")) || [];
+let appointments = JSON.parse(
+    localStorage.getItem("salonMateAppointments")
+) || [];
 
-let customers =
-    JSON.parse(localStorage.getItem("salonMateCustomers")) || [];
+let customers = JSON.parse(
+    localStorage.getItem("salonMateCustomers")
+) || [];
 
-let services =
-    JSON.parse(localStorage.getItem("salonMateServices")) || [];
+let services = JSON.parse(
+    localStorage.getItem("salonMateServices")
+) || [];
 
+const addAppointmentBtn =
+    document.getElementById("addAppointmentBtn");
 
-// ========================================
-// SAVE DATA
-// ========================================
+const closeModalBtn =
+    document.getElementById("closeModalBtn");
+
+const appointmentModal =
+    document.getElementById("appointmentModal");
+
+const appointmentForm =
+    document.getElementById("appointmentForm");
+
+const appointmentsList =
+    document.getElementById("appointmentsList");
+
+const clearAppointmentsBtn =
+    document.getElementById("clearAppointmentsBtn");
+
 
 function saveData() {
-
     localStorage.setItem(
         "salonMateAppointments",
         JSON.stringify(appointments)
@@ -36,208 +49,252 @@ function saveData() {
 }
 
 
-// ========================================
-// UPDATE DASHBOARD
-// ========================================
-
 function updateDashboard() {
 
-    const appointmentCount =
-        document.getElementById("appointmentCount");
+    document.getElementById("totalAppointments").textContent =
+        appointments.length;
 
-    const customerCount =
-        document.getElementById("customerCount");
+    document.getElementById("totalCustomers").textContent =
+        customers.length;
 
-    const serviceCount =
-        document.getElementById("serviceCount");
-
-
-    if (appointmentCount) {
-        appointmentCount.textContent =
-            appointments.length;
-    }
-
-    if (customerCount) {
-        customerCount.textContent =
-            customers.length;
-    }
-
-    if (serviceCount) {
-        serviceCount.textContent =
-            services.length;
-    }
+    document.getElementById("totalServices").textContent =
+        services.length;
 }
 
-
-// ========================================
-// ADD APPOINTMENT
-// ========================================
-
-function addAppointment() {
-
-    const name = prompt(
-        "Enter customer name:"
-    );
-
-    if (!name || name.trim() === "") {
-        return;
-    }
-
-
-    const service = prompt(
-        "Enter the service:"
-    );
-
-    if (!service || service.trim() === "") {
-        return;
-    }
-
-
-    const time = prompt(
-        "Enter appointment time:"
-    );
-
-    if (!time || time.trim() === "") {
-        return;
-    }
-
-
-    const cleanName = name.trim();
-    const cleanService = service.trim();
-    const cleanTime = time.trim();
-
-
-    // Create appointment
-    appointments.push({
-        name: cleanName,
-        service: cleanService,
-        time: cleanTime
-    });
-
-
-    // Add customer if new
-    if (!customers.includes(cleanName)) {
-        customers.push(cleanName);
-    }
-
-
-    // Add service if new
-    if (!services.includes(cleanService)) {
-        services.push(cleanService);
-    }
-
-
-    // Save everything
-    saveData();
-
-
-    // Refresh screen
-    updateDashboard();
-    displayAppointments();
-
-
-    alert(
-        "Appointment added successfully! 🎉"
-    );
-}
-
-
-// ========================================
-// DISPLAY APPOINTMENTS
-// ========================================
 
 function displayAppointments() {
 
-    const container =
-        document.getElementById("appointments");
+    appointmentsList.innerHTML = "";
 
-
-    if (!container) {
-        return;
-    }
-
-
-    // No appointments
     if (appointments.length === 0) {
 
-        container.innerHTML = `
-            <div style="font-size:40px;">📅</div>
-            <p>No appointments yet.</p>
-            <p>Add your first appointment to get started.</p>
-        `;
+        appointmentsList.innerHTML =
+            '<p class="empty-message">No appointments yet.</p>';
 
         return;
     }
 
+    appointments.forEach(function (appointment, index) {
 
-    // Clear old appointments
-    container.innerHTML = "";
-
-
-    // Display appointments
-    appointments.forEach(function(appointment) {
-
-        const item =
+        const card =
             document.createElement("div");
 
+        card.className = "appointment-card";
 
-        item.style.textAlign = "left";
-        item.style.padding = "15px";
-        item.style.marginBottom = "10px";
-        item.style.background = "#f7f5fb";
-        item.style.borderRadius = "12px";
-
-
-        item.innerHTML = `
-            <strong>👩🏽 ${escapeHTML(appointment.name)}</strong><br>
-            💇🏽‍♀️ ${escapeHTML(appointment.service)}<br>
-            🕐 ${escapeHTML(appointment.time)}
+        card.innerHTML = `
+            <h3>${escapeHTML(appointment.customerName)}</h3>
+            <p><strong>Service:</strong> ${escapeHTML(appointment.serviceName)}</p>
+            <p><strong>Date:</strong> ${escapeHTML(appointment.date)}</p>
+            <p><strong>Time:</strong> ${escapeHTML(appointment.time)}</p>
+            <button class="delete-btn" data-index="${index}">
+                Delete
+            </button>
         `;
 
-
-        container.appendChild(item);
+        appointmentsList.appendChild(card);
     });
+
+    document
+        .querySelectorAll(".delete-btn")
+        .forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                const index =
+                    Number(button.dataset.index);
+
+                appointments.splice(index, 1);
+
+                saveData();
+                updateDashboard();
+                displayAppointments();
+            });
+        });
 }
 
 
-// ========================================
-// SECURITY
-// ========================================
-
-function escapeHTML(text) {
+function escapeHTML(value) {
 
     const div =
         document.createElement("div");
 
-    div.textContent = text;
+    div.textContent = value;
 
     return div.innerHTML;
 }
 
 
-// ========================================
-// ACTION CARDS
-// ========================================
+addAppointmentBtn.addEventListener(
+    "click",
+    function () {
 
-function showMessage(section) {
+        appointmentModal.classList.remove("hidden");
 
-    alert(
-        section +
-        " section is coming next! 🚀"
-    );
-}
-
-
-// ========================================
-// START SALONMATE
-// ========================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        updateDashboard();
-        displayAppointments();
-
+        document
+            .getElementById("appointmentDate")
+            .valueAsDate = new Date();
     }
 );
+
+
+closeModalBtn.addEventListener(
+    "click",
+    function () {
+
+        appointmentModal.classList.add("hidden");
+
+        appointmentForm.reset();
+    }
+);
+
+
+appointmentModal.addEventListener(
+    "click",
+    function (event) {
+
+        if (event.target === appointmentModal) {
+
+            appointmentModal.classList.add("hidden");
+
+            appointmentForm.reset();
+        }
+    }
+);
+
+
+appointmentForm.addEventListener(
+    "submit",
+    function (event) {
+
+        event.preventDefault();
+
+        const customerName =
+            document
+                .getElementById("customerName")
+                .value
+                .trim();
+
+        const serviceName =
+            document
+                .getElementById("serviceName")
+                .value
+                .trim();
+
+        const date =
+            document
+                .getElementById("appointmentDate")
+                .value;
+
+        const time =
+            document
+                .getElementById("appointmentTime")
+                .value;
+
+
+        if (
+            !customerName ||
+            !serviceName ||
+            !date ||
+            !time
+        ) {
+            alert("Please complete all fields.");
+            return;
+        }
+
+
+        const appointment = {
+
+            id: Date.now(),
+
+            customerName:
+                customerName,
+
+            serviceName:
+                serviceName,
+
+            date:
+                date,
+
+            time:
+                time
+        };
+
+
+        appointments.push(appointment);
+
+
+        if (
+            !customers.some(
+                function (customer) {
+                    return customer === customerName;
+                }
+            )
+        ) {
+            customers.push(customerName);
+        }
+
+
+        if (
+            !services.some(
+                function (service) {
+                    return service === serviceName;
+                }
+            )
+        ) {
+            services.push(serviceName);
+        }
+
+
+        saveData();
+
+        updateDashboard();
+
+        displayAppointments();
+
+
+        appointmentForm.reset();
+
+        appointmentModal.classList.add("hidden");
+
+
+        alert("Appointment saved successfully!");
+    }
+);
+
+
+clearAppointmentsBtn.addEventListener(
+    "click",
+    function () {
+
+        if (appointments.length === 0) {
+            alert("There are no appointments to clear.");
+            return;
+        }
+
+
+        const confirmed =
+            confirm(
+                "Are you sure you want to delete all appointments?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        appointments = [];
+
+        saveData();
+
+        updateDashboard();
+
+        displayAppointments();
+    }
+);
+
+
+updateDashboard();
+displayAppointments();
+
+}); 
