@@ -1,60 +1,79 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SalonMate</title>
     <link rel="stylesheet" href="style.css">
-</head><body><header class="topbar">
+</head>
+
+<body>
+
+<header class="topbar">
     <div>
         <h1>SalonMate</h1>
         <p>Salon management made simple</p>
     </div>
 
-    <button id="addAppointmentBtn">+ Add Appointment</button>
+    <button id="addAppointmentBtn" class="primary-btn">
+        + Appointment
+    </button>
 </header>
+
 
 <main class="container">
 
+    <!-- DASHBOARD -->
+
     <section class="welcome-card">
         <h2>Welcome to SalonMate 👋</h2>
-        <p>Manage your salon, customers, services and appointments in one place.</p>
+        <p>Manage your salon, customers, services and appointments.</p>
     </section>
+
 
     <section class="stats">
 
         <div class="stat-card">
-            <span>Total Appointments</span>
+            <span>Appointments</span>
             <strong id="totalAppointments">0</strong>
         </div>
 
         <div class="stat-card">
-            <span>Total Customers</span>
+            <span>Customers</span>
             <strong id="totalCustomers">0</strong>
         </div>
 
         <div class="stat-card">
-            <span>Total Services</span>
+            <span>Services</span>
             <strong id="totalServices">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Today's Appointments</span>
+            <strong id="todayAppointments">0</strong>
         </div>
 
     </section>
 
+
+    <!-- CUSTOMERS AND SERVICES -->
 
     <section class="management-grid">
 
         <div class="panel">
 
             <div class="panel-header">
-                <h2>Customers 👥</h2>
+                <div>
+                    <h2>Customers</h2>
+                    <p>Manage your salon customers.</p>
+                </div>
 
                 <button id="addCustomerBtn" class="small-btn">
                     + Customer
                 </button>
             </div>
 
-            <div id="customersList">
-                <p class="empty-message">No customers yet.</p>
-            </div>
+            <div id="customersList"></div>
 
         </div>
 
@@ -62,82 +81,100 @@
         <div class="panel">
 
             <div class="panel-header">
-                <h2>Services 💇🏽</h2>
+                <div>
+                    <h2>Services</h2>
+                    <p>Manage your salon services.</p>
+                </div>
 
                 <button id="addServiceBtn" class="small-btn">
                     + Service
                 </button>
             </div>
 
-            <div id="servicesList">
-                <p class="empty-message">No services yet.</p>
-            </div>
+            <div id="servicesList"></div>
 
         </div>
 
     </section>
 
 
+    <!-- APPOINTMENTS -->
+
     <section class="panel">
 
-        <div class="panel-header">
-            <h2>Appointments 📅</h2>
+        <div class="panel-header appointment-header">
+
+            <div>
+                <h2>Appointments</h2>
+                <p>View and manage your appointments.</p>
+            </div>
 
             <button id="clearAppointmentsBtn" class="danger-btn">
                 Clear All
             </button>
+
         </div>
 
-        <div id="appointmentsList">
-            <p class="empty-message">No appointments yet.</p>
+
+        <div class="filters">
+
+            <input
+                type="search"
+                id="searchAppointments"
+                placeholder="Search appointments..."
+            >
+
+            <select id="statusFilter">
+                <option value="All">All statuses</option>
+                <option value="Booked">Booked</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="No-show">No-show</option>
+            </select>
+
         </div>
+
+
+        <div id="appointmentsList"></div>
 
     </section>
 
 </main>
 
 
-<!-- Appointment Modal -->
+<!-- APPOINTMENT MODAL -->
 
 <div id="appointmentModal" class="modal hidden">
 
     <div class="modal-content">
 
         <div class="modal-header">
-
             <h2>New Appointment</h2>
 
             <button id="closeModalBtn" class="close-btn">
-                &times;
+                ×
             </button>
-
         </div>
 
 
         <form id="appointmentForm">
 
             <label for="customerName">
-                Customer Name
+                Customer
             </label>
 
-            <input
-                type="text"
-                id="customerName"
-                placeholder="Enter customer name"
-                required
-            >
+            <select id="customerName" required>
+                <option value="">Select customer</option>
+            </select>
 
 
             <label for="serviceName">
                 Service
             </label>
 
-            <input
-                type="text"
-                id="serviceName"
-                placeholder="e.g. Haircut"
-                required
-            >
+            <select id="serviceName" required>
+                <option value="">Select service</option>
+            </select>
 
 
             <label for="appointmentDate">
@@ -161,14 +198,19 @@
                 required
             >
 
-<label for="appointmentStatus">Status</label>
 
-<select id="appointmentStatus" required>
-    <option value="Booked">Booked</option>
-    <option value="Completed">Completed</option>
-    <option value="Cancelled">Cancelled</option>
-    <option value="No-show">No-show</option>
-</select> 
+            <label for="appointmentStatus">
+                Status
+            </label>
+
+            <select id="appointmentStatus" required>
+                <option value="Booked">Booked</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="No-show">No-show</option>
+            </select>
+
+
             <button type="submit" class="save-btn">
                 Save Appointment
             </button>
@@ -180,20 +222,18 @@
 </div>
 
 
-<!-- Customer Modal -->
+<!-- CUSTOMER MODAL -->
 
 <div id="customerModal" class="modal hidden">
 
     <div class="modal-content">
 
         <div class="modal-header">
-
-            <h2>Add Customer</h2>
+            <h2>New Customer</h2>
 
             <button id="closeCustomerModalBtn" class="close-btn">
-                &times;
+                ×
             </button>
-
         </div>
 
 
@@ -218,7 +258,7 @@
             <input
                 type="tel"
                 id="customerPhone"
-                placeholder="e.g. 071 234 5678"
+                placeholder="Enter phone number"
             >
 
 
@@ -233,20 +273,18 @@
 </div>
 
 
-<!-- Service Modal -->
+<!-- SERVICE MODAL -->
 
 <div id="serviceModal" class="modal hidden">
 
     <div class="modal-content">
 
         <div class="modal-header">
-
-            <h2>Add Service</h2>
+            <h2>New Service</h2>
 
             <button id="closeServiceModalBtn" class="close-btn">
-                &times;
+                ×
             </button>
-
         </div>
 
 
@@ -259,21 +297,21 @@
             <input
                 type="text"
                 id="newServiceName"
-                placeholder="e.g. Haircut"
+                placeholder="e.g. Braids"
                 required
             >
 
 
             <label for="servicePrice">
-                Price
+                Price (R)
             </label>
 
             <input
                 type="number"
                 id="servicePrice"
-                placeholder="e.g. 150"
                 min="0"
                 step="0.01"
+                placeholder="250"
                 required
             >
 
@@ -285,8 +323,8 @@
             <input
                 type="number"
                 id="serviceDuration"
-                placeholder="e.g. 60"
                 min="1"
+                placeholder="120"
                 required
             >
 
