@@ -7,12 +7,15 @@ let customers =
 let services =
     JSON.parse(localStorage.getItem("salonMateServices")) || [];
 
+let editingAppointmentIndex = null;
+
 
 // ===============================
 // SAVE DATA
 // ===============================
 
 function saveData() {
+
     localStorage.setItem(
         "salonMateAppointments",
         JSON.stringify(appointments)
@@ -35,56 +38,45 @@ function saveData() {
 // ===============================
 
 function getCustomerName(customer) {
-    if (typeof customer === "string") {
-        return customer;
-    }
-
-    return customer.name || "";
+    return typeof customer === "string"
+        ? customer
+        : customer.name || "";
 }
-
 
 function getCustomerPhone(customer) {
-    if (typeof customer === "string") {
-        return "";
-    }
-
-    return customer.phone || "";
+    return typeof customer === "string"
+        ? ""
+        : customer.phone || "";
 }
-
 
 function getServiceName(service) {
-    if (typeof service === "string") {
-        return service;
-    }
-
-    return service.name || "";
+    return typeof service === "string"
+        ? service
+        : service.name || "";
 }
-
 
 function getServicePrice(service) {
-    if (typeof service === "string") {
-        return "";
-    }
-
-    return service.price || "";
+    return typeof service === "string"
+        ? ""
+        : service.price || "";
 }
-
 
 function getServiceDuration(service) {
-    if (typeof service === "string") {
-        return "";
-    }
-
-    return service.duration || "";
+    return typeof service === "string"
+        ? ""
+        : service.duration || "";
 }
-
 
 function getAppointmentStatus(appointment) {
     return appointment.status || "Booked";
 }
 
+function getPayment(appointment) {
+    return Number(appointment.payment) || 0;
+}
 
 function getToday() {
+
     const today = new Date();
 
     const year = today.getFullYear();
@@ -94,8 +86,8 @@ function getToday() {
     return `${year}-${month}-${day}`;
 }
 
-
 function escapeHTML(value) {
+
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -120,15 +112,55 @@ function updateDashboard() {
     document.getElementById("totalServices").textContent =
         services.length;
 
+
     const today = getToday();
 
-    const todayCount = appointments.filter(function (appointment) {
-        return appointment.date === today &&
-            getAppointmentStatus(appointment) !== "Cancelled";
-    }).length;
+
+    const todayAppointments =
+        appointments.filter(function (appointment) {
+
+            return appointment.date === today &&
+                getAppointmentStatus(appointment) !== "Cancelled";
+
+        }).length;
+
 
     document.getElementById("todayAppointments").textContent =
-        todayCount;
+        todayAppointments;
+
+
+    const totalRevenue =
+        appointments.reduce(function (total, appointment) {
+
+            if (getAppointmentStatus(appointment) === "Cancelled") {
+                return total;
+            }
+
+            return total + getPayment(appointment);
+
+        }, 0);
+
+
+    const todayRevenue =
+        appointments.reduce(function (total, appointment) {
+
+            if (
+                appointment.date === today &&
+                getAppointmentStatus(appointment) !== "Cancelled"
+            ) {
+                return total + getPayment(appointment);
+            }
+
+            return total;
+
+        }, 0);
+
+
+    document.getElementById("totalRevenue").textContent =
+        `R${totalRevenue.toFixed(2)}`;
+
+    document.getElementById("todayRevenue").textContent =
+        `R${todayRevenue.toFixed(2)}`;
 }
 
 
@@ -138,9 +170,12 @@ function updateDashboard() {
 
 function displayCustomers() {
 
-    const list = document.getElementById("customersList");
+    const list =
+        document.getElementById("customersList");
+
 
     if (customers.length === 0) {
+
         list.innerHTML =
             `<div class="empty-message">
                 No customers yet. Add your first customer.
@@ -149,48 +184,57 @@ function displayCustomers() {
         return;
     }
 
-    list.innerHTML = customers.map(function (customer, index) {
 
-        const name = getCustomerName(customer);
-        const phone = getCustomerPhone(customer);
+    list.innerHTML =
+        customers.map(function (customer, index) {
 
-        return `
-            <div class="customer-card">
+            const name = getCustomerName(customer);
+            const phone = getCustomerPhone(customer);
 
-                <div class="customer-info">
-                    <strong>${escapeHTML(name)}</strong>
 
-                    <span>
-                        ${phone
-                            ? escapeHTML(phone)
-                            : "No phone number"}
-                    </span>
+            return `
+                <div class="customer-card">
+
+                    <div class="customer-info">
+
+                        <strong>
+                            ${escapeHTML(name)}
+                        </strong>
+
+                        <span>
+                            ${phone
+                                ? escapeHTML(phone)
+                                : "No phone number"}
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteCustomer(${index})">
+
+                        Delete
+
+                    </button>
+
                 </div>
+            `;
 
-                <button
-                    class="delete-btn"
-                    onclick="deleteCustomer(${index})">
-                    Delete
-                </button>
-
-            </div>
-        `;
-
-    }).join("");
+        }).join("");
 }
 
 
 function deleteCustomer(index) {
 
-    const name = getCustomerName(customers[index]);
+    const name =
+        getCustomerName(customers[index]);
 
-    const confirmed = confirm(
-        `Delete customer "${name}"?`
-    );
 
-    if (!confirmed) {
+    if (!confirm(`Delete customer "${name}"?`)) {
         return;
     }
+
 
     customers.splice(index, 1);
 
@@ -208,9 +252,12 @@ function deleteCustomer(index) {
 
 function displayServices() {
 
-    const list = document.getElementById("servicesList");
+    const list =
+        document.getElementById("servicesList");
+
 
     if (services.length === 0) {
+
         list.innerHTML =
             `<div class="empty-message">
                 No services yet. Add your first service.
@@ -219,62 +266,80 @@ function displayServices() {
         return;
     }
 
-    list.innerHTML = services.map(function (service, index) {
 
-        const name = getServiceName(service);
-        const price = getServicePrice(service);
-        const duration = getServiceDuration(service);
+    list.innerHTML =
+        services.map(function (service, index) {
 
-        let details = "";
+            const name = getServiceName(service);
+            const price = getServicePrice(service);
+            const duration = getServiceDuration(service);
 
-        if (price !== "") {
-            details += `R${escapeHTML(price)}`;
-        }
 
-        if (duration !== "") {
-            if (details !== "") {
-                details += " • ";
+            let details = "";
+
+
+            if (price !== "") {
+                details += `R${escapeHTML(price)}`;
             }
 
-            details += `${escapeHTML(duration)} min`;
-        }
 
-        if (details === "") {
-            details = "No price or duration";
-        }
+            if (duration !== "") {
 
-        return `
-            <div class="service-card">
+                if (details !== "") {
+                    details += " • ";
+                }
 
-                <div class="service-info">
-                    <strong>${escapeHTML(name)}</strong>
-                    <span>${details}</span>
+                details +=
+                    `${escapeHTML(duration)} min`;
+            }
+
+
+            if (!details) {
+                details = "No price or duration";
+            }
+
+
+            return `
+                <div class="service-card">
+
+                    <div class="service-info">
+
+                        <strong>
+                            ${escapeHTML(name)}
+                        </strong>
+
+                        <span>
+                            ${details}
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteService(${index})">
+
+                        Delete
+
+                    </button>
+
                 </div>
+            `;
 
-                <button
-                    class="delete-btn"
-                    onclick="deleteService(${index})">
-                    Delete
-                </button>
-
-            </div>
-        `;
-
-    }).join("");
+        }).join("");
 }
 
 
 function deleteService(index) {
 
-    const name = getServiceName(services[index]);
+    const name =
+        getServiceName(services[index]);
 
-    const confirmed = confirm(
-        `Delete service "${name}"?`
-    );
 
-    if (!confirmed) {
+    if (!confirm(`Delete service "${name}"?`)) {
         return;
     }
+
 
     services.splice(index, 1);
 
@@ -292,19 +357,27 @@ function deleteService(index) {
 
 function populateCustomerDropdown() {
 
-    const select = document.getElementById("customerName");
+    const select =
+        document.getElementById("customerName");
+
 
     select.innerHTML =
         `<option value="">Select customer</option>`;
 
+
     customers.forEach(function (customer) {
 
-        const name = getCustomerName(customer);
+        const name =
+            getCustomerName(customer);
 
-        const option = document.createElement("option");
+
+        const option =
+            document.createElement("option");
+
 
         option.value = name;
         option.textContent = name;
+
 
         select.appendChild(option);
     });
@@ -313,19 +386,27 @@ function populateCustomerDropdown() {
 
 function populateServiceDropdown() {
 
-    const select = document.getElementById("serviceName");
+    const select =
+        document.getElementById("serviceName");
+
 
     select.innerHTML =
         `<option value="">Select service</option>`;
 
+
     services.forEach(function (service) {
 
-        const name = getServiceName(service);
+        const name =
+            getServiceName(service);
 
-        const option = document.createElement("option");
+
+        const option =
+            document.createElement("option");
+
 
         option.value = name;
         option.textContent = name;
+
 
         select.appendChild(option);
     });
@@ -338,7 +419,9 @@ function populateServiceDropdown() {
 
 function displayAppointments() {
 
-    const list = document.getElementById("appointmentsList");
+    const list =
+        document.getElementById("appointmentsList");
+
 
     const search =
         document
@@ -347,41 +430,50 @@ function displayAppointments() {
             .toLowerCase()
             .trim();
 
+
     const statusFilter =
         document.getElementById("statusFilter").value;
 
 
-    let filtered = appointments.filter(function (appointment) {
+    let filtered =
+        appointments.filter(function (appointment) {
 
-        const customer =
-            String(appointment.customer || "").toLowerCase();
+            const customer =
+                String(appointment.customer || "")
+                    .toLowerCase();
 
-        const service =
-            String(appointment.service || "").toLowerCase();
+            const service =
+                String(appointment.service || "")
+                    .toLowerCase();
 
-        const date =
-            String(appointment.date || "").toLowerCase();
+            const date =
+                String(appointment.date || "")
+                    .toLowerCase();
 
-        const time =
-            String(appointment.time || "").toLowerCase();
+            const time =
+                String(appointment.time || "")
+                    .toLowerCase();
 
-        const status =
-            getAppointmentStatus(appointment);
+            const status =
+                getAppointmentStatus(appointment);
 
-        const matchesSearch =
-            !search ||
-            customer.includes(search) ||
-            service.includes(search) ||
-            date.includes(search) ||
-            time.includes(search) ||
-            status.toLowerCase().includes(search);
 
-        const matchesStatus =
-            statusFilter === "All" ||
-            status === statusFilter;
+            const matchesSearch =
+                !search ||
+                customer.includes(search) ||
+                service.includes(search) ||
+                date.includes(search) ||
+                time.includes(search) ||
+                status.toLowerCase().includes(search);
 
-        return matchesSearch && matchesStatus;
-    });
+
+            const matchesStatus =
+                statusFilter === "All" ||
+                status === statusFilter;
+
+
+            return matchesSearch && matchesStatus;
+        });
 
 
     filtered.sort(function (a, b) {
@@ -391,6 +483,7 @@ function displayAppointments() {
 
         const second =
             `${b.date || ""} ${b.time || ""}`;
+
 
         return first.localeCompare(second);
     });
@@ -407,113 +500,181 @@ function displayAppointments() {
     }
 
 
-    list.innerHTML = filtered.map(function (appointment) {
+    list.innerHTML =
+        filtered.map(function (appointment) {
 
-        const realIndex =
-            appointments.indexOf(appointment);
-
-        const status =
-            getAppointmentStatus(appointment);
-
-        let statusClass = "status-booked";
-
-        if (status === "Completed") {
-            statusClass = "status-completed";
-        }
-
-        if (status === "Cancelled") {
-            statusClass = "status-cancelled";
-        }
-
-        if (status === "No-show") {
-            statusClass = "status-no-show";
-        }
+            const realIndex =
+                appointments.indexOf(appointment);
 
 
-        return `
-            <div class="appointment-card">
+            const status =
+                getAppointmentStatus(appointment);
 
-                <div class="appointment-main">
 
-                    <h3>
-                        ${escapeHTML(appointment.customer)}
-                    </h3>
+            let statusClass =
+                "status-booked";
 
-                    <div class="appointment-meta">
-                        Service:
-                        ${escapeHTML(appointment.service)}
+
+            if (status === "Completed") {
+                statusClass = "status-completed";
+            }
+
+
+            if (status === "Cancelled") {
+                statusClass = "status-cancelled";
+            }
+
+
+            if (status === "No-show") {
+                statusClass = "status-no-show";
+            }
+
+
+            const payment =
+                getPayment(appointment);
+
+
+            return `
+                <div class="appointment-card">
+
+                    <div class="appointment-main">
+
+                        <h3>
+                            ${escapeHTML(
+                                appointment.customer
+                            )}
+                        </h3>
+
+
+                        <div class="appointment-meta">
+                            Service:
+                            ${escapeHTML(
+                                appointment.service
+                            )}
+                        </div>
+
+
+                        <div class="appointment-meta">
+                            📅 ${escapeHTML(
+                                appointment.date
+                            )}
+                            &nbsp;
+                            🕐 ${escapeHTML(
+                                appointment.time
+                            )}
+                        </div>
+
+
+                        <span
+                            class="status-badge ${statusClass}">
+
+                            ${escapeHTML(status)}
+
+                        </span>
+
+
+                        <div class="payment-info">
+
+                            💰 Paid:
+                            R${payment.toFixed(2)}
+
+                        </div>
+
                     </div>
 
-                    <div class="appointment-meta">
-                        📅 ${escapeHTML(appointment.date)}
-                        &nbsp;
-                        🕐 ${escapeHTML(appointment.time)}
+
+                    <div class="appointment-actions">
+
+                        <select
+                            onchange="
+                                changeAppointmentStatus(
+                                    ${realIndex},
+                                    this.value
+                                )
+                            ">
+
+                            <option value="Booked"
+                                ${status === "Booked"
+                                    ? "selected"
+                                    : ""}>
+                                Booked
+                            </option>
+
+                            <option value="Completed"
+                                ${status === "Completed"
+                                    ? "selected"
+                                    : ""}>
+                                Completed
+                            </option>
+
+                            <option value="Cancelled"
+                                ${status === "Cancelled"
+                                    ? "selected"
+                                    : ""}>
+                                Cancelled
+                            </option>
+
+                            <option value="No-show"
+                                ${status === "No-show"
+                                    ? "selected"
+                                    : ""}>
+                                No-show
+                            </option>
+
+                        </select>
+
+
+                        <button
+                            class="edit-btn"
+                            onclick="
+                                editAppointment(
+                                    ${realIndex}
+                                )
+                            ">
+
+                            Edit
+
+                        </button>
+
+
+                        <button
+                            class="delete-btn"
+                            onclick="
+                                deleteAppointment(
+                                    ${realIndex}
+                                )
+                            ">
+
+                            Delete
+
+                        </button>
+
                     </div>
 
-                    <span class="status-badge ${statusClass}">
-                        ${escapeHTML(status)}
-                    </span>
-
                 </div>
+            `;
 
-
-                <div class="appointment-actions">
-
-                    <select
-                        onchange="changeAppointmentStatus(
-                            ${realIndex},
-                            this.value
-                        )">
-
-                        <option value="Booked"
-                            ${status === "Booked" ? "selected" : ""}>
-                            Booked
-                        </option>
-
-                        <option value="Completed"
-                            ${status === "Completed" ? "selected" : ""}>
-                            Completed
-                        </option>
-
-                        <option value="Cancelled"
-                            ${status === "Cancelled" ? "selected" : ""}>
-                            Cancelled
-                        </option>
-
-                        <option value="No-show"
-                            ${status === "No-show" ? "selected" : ""}>
-                            No-show
-                        </option>
-
-                    </select>
-
-
-                    <button
-                        class="delete-btn"
-                        onclick="deleteAppointment(${realIndex})">
-                        Delete
-                    </button>
-
-                </div>
-
-            </div>
-        `;
-
-    }).join("");
+        }).join("");
 }
 
 
 // ===============================
-// CHANGE APPOINTMENT STATUS
+// CHANGE STATUS
 // ===============================
 
-function changeAppointmentStatus(index, newStatus) {
+function changeAppointmentStatus(
+    index,
+    newStatus
+) {
 
-    appointments[index].status = newStatus;
+    appointments[index].status =
+        newStatus;
+
 
     saveData();
 
     displayAppointments();
+
     updateDashboard();
 }
 
@@ -524,18 +685,17 @@ function changeAppointmentStatus(index, newStatus) {
 
 function deleteAppointment(index) {
 
-    const confirmed =
-        confirm("Delete this appointment?");
-
-    if (!confirmed) {
+    if (!confirm("Delete this appointment?")) {
         return;
     }
+
 
     appointments.splice(index, 1);
 
     saveData();
 
     displayAppointments();
+
     updateDashboard();
 }
 
@@ -558,120 +718,292 @@ document
     .getElementById("addAppointmentBtn")
     .addEventListener("click", function () {
 
+        editingAppointmentIndex = null;
+
+
+        document.getElementById(
+            "appointmentModalTitle"
+        ).textContent =
+            "New Appointment";
+
+
         populateCustomerDropdown();
         populateServiceDropdown();
 
-        document.getElementById("appointmentDate").value =
+
+        document.getElementById(
+            "appointmentForm"
+        ).reset();
+
+
+        document.getElementById(
+            "appointmentDate"
+        ).value =
             getToday();
 
-        document.getElementById("appointmentStatus").value =
+
+        document.getElementById(
+            "appointmentStatus"
+        ).value =
             "Booked";
 
-        appointmentModal.classList.remove("hidden");
+
+        document.getElementById(
+            "appointmentPayment"
+        ).value =
+            "";
+
+
+        appointmentModal.classList.remove(
+            "hidden"
+        );
     });
 
 
 document
     .getElementById("closeModalBtn")
-    .addEventListener("click", function () {
-
-        appointmentModal.classList.add("hidden");
-    });
+    .addEventListener("click", closeAppointmentModal);
 
 
-// Close when clicking outside modal
+function closeAppointmentModal() {
 
-appointmentModal.addEventListener("click", function (event) {
+    appointmentModal.classList.add("hidden");
 
-    if (event.target === appointmentModal) {
-        appointmentModal.classList.add("hidden");
+    editingAppointmentIndex = null;
+}
+
+
+appointmentModal.addEventListener(
+    "click",
+    function (event) {
+
+        if (event.target === appointmentModal) {
+            closeAppointmentModal();
+        }
+
     }
-});
+);
 
 
 // ===============================
-// ADD APPOINTMENT
+// ADD / EDIT APPOINTMENT
 // ===============================
 
 document
     .getElementById("appointmentForm")
-    .addEventListener("submit", function (event) {
+    .addEventListener(
+        "submit",
+        function (event) {
 
-        event.preventDefault();
-
-
-        const customer =
-            document.getElementById("customerName").value;
-
-        const service =
-            document.getElementById("serviceName").value;
-
-        const date =
-            document.getElementById("appointmentDate").value;
-
-        const time =
-            document.getElementById("appointmentTime").value;
-
-        const status =
-            document.getElementById("appointmentStatus").value;
+            event.preventDefault();
 
 
-        if (!customer || !service || !date || !time) {
-
-            alert("Please complete all required fields.");
-
-            return;
-        }
+            const customer =
+                document.getElementById(
+                    "customerName"
+                ).value;
 
 
-        // Double-booking protection
-
-        const duplicate =
-            appointments.some(function (appointment) {
-
-                return appointment.date === date &&
-                    appointment.time === time &&
-                    getAppointmentStatus(appointment) !== "Cancelled";
-            });
+            const service =
+                document.getElementById(
+                    "serviceName"
+                ).value;
 
 
-        if (duplicate) {
+            const date =
+                document.getElementById(
+                    "appointmentDate"
+                ).value;
+
+
+            const time =
+                document.getElementById(
+                    "appointmentTime"
+                ).value;
+
+
+            const status =
+                document.getElementById(
+                    "appointmentStatus"
+                ).value;
+
+
+            const payment =
+                Number(
+                    document.getElementById(
+                        "appointmentPayment"
+                    ).value
+                ) || 0;
+
+
+            if (
+                !customer ||
+                !service ||
+                !date ||
+                !time
+            ) {
+
+                alert(
+                    "Please complete all required fields."
+                );
+
+                return;
+            }
+
+
+            // Double booking protection
+
+            const duplicate =
+                appointments.some(
+                    function (appointment, index) {
+
+                        if (
+                            editingAppointmentIndex !== null &&
+                            index === editingAppointmentIndex
+                        ) {
+                            return false;
+                        }
+
+
+                        return (
+                            appointment.date === date &&
+                            appointment.time === time &&
+                            getAppointmentStatus(
+                                appointment
+                            ) !== "Cancelled"
+                        );
+
+                    }
+                );
+
+
+            if (duplicate) {
+
+                alert(
+                    "This time slot is already booked. Please choose another time."
+                );
+
+                return;
+            }
+
+
+            const appointmentData = {
+
+                customer: customer,
+
+                service: service,
+
+                date: date,
+
+                time: time,
+
+                status: status,
+
+                payment: payment
+
+            };
+
+
+            if (
+                editingAppointmentIndex !== null
+            ) {
+
+                appointments[
+                    editingAppointmentIndex
+                ] = appointmentData;
+
+            } else {
+
+                appointments.push(
+                    appointmentData
+                );
+            }
+
+
+            saveData();
+
+            displayAppointments();
+
+            updateDashboard();
+
+            closeAppointmentModal();
 
             alert(
-                "This time slot is already booked. Please choose another time."
+                editingAppointmentIndex !== null
+                    ? "Appointment updated successfully!"
+                    : "Appointment saved successfully!"
             );
 
-            return;
         }
+    );
 
 
-        appointments.push({
+// ===============================
+// EDIT APPOINTMENT
+// ===============================
 
-            customer: customer,
-            service: service,
-            date: date,
-            time: time,
-            status: status
+function editAppointment(index) {
 
-        });
+    const appointment =
+        appointments[index];
 
 
-        saveData();
+    editingAppointmentIndex =
+        index;
 
-        displayAppointments();
-        updateDashboard();
 
-        document
-            .getElementById("appointmentForm")
-            .reset();
+    populateCustomerDropdown();
+    populateServiceDropdown();
 
-        document.getElementById("appointmentStatus").value =
-            "Booked";
 
-        appointmentModal.classList.add("hidden");
+    document.getElementById(
+        "appointmentModalTitle"
+    ).textContent =
+        "Edit Appointment";
 
-        alert("Appointment saved successfully!");
-    });
+
+    document.getElementById(
+        "customerName"
+    ).value =
+        appointment.customer;
+
+
+    document.getElementById(
+        "serviceName"
+    ).value =
+        appointment.service;
+
+
+    document.getElementById(
+        "appointmentDate"
+    ).value =
+        appointment.date;
+
+
+    document.getElementById(
+        "appointmentTime"
+    ).value =
+        appointment.time;
+
+
+    document.getElementById(
+        "appointmentStatus"
+    ).value =
+        getAppointmentStatus(
+            appointment
+        );
+
+
+    document.getElementById(
+        "appointmentPayment"
+    ).value =
+        getPayment(appointment);
+
+
+    appointmentModal.classList.remove(
+        "hidden"
+    );
+}
 
 
 // ===============================
@@ -680,30 +1012,48 @@ document
 
 document
     .getElementById("addCustomerBtn")
-    .addEventListener("click", function () {
+    .addEventListener(
+        "click",
+        function () {
 
-        document
-            .getElementById("customerForm")
-            .reset();
+            document
+                .getElementById("customerForm")
+                .reset();
 
-        customerModal.classList.remove("hidden");
-    });
+            customerModal.classList.remove(
+                "hidden"
+            );
+
+        }
+    );
 
 
 document
     .getElementById("closeCustomerModalBtn")
-    .addEventListener("click", function () {
+    .addEventListener(
+        "click",
+        function () {
 
-        customerModal.classList.add("hidden");
-    });
+            customerModal.classList.add(
+                "hidden"
+            );
+
+        }
+    );
 
 
-customerModal.addEventListener("click", function (event) {
+customerModal.addEventListener(
+    "click",
+    function (event) {
 
-    if (event.target === customerModal) {
-        customerModal.classList.add("hidden");
+        if (event.target === customerModal) {
+            customerModal.classList.add(
+                "hidden"
+            );
+        }
+
     }
-});
+);
 
 
 // ===============================
@@ -712,70 +1062,99 @@ customerModal.addEventListener("click", function (event) {
 
 document
     .getElementById("customerForm")
-    .addEventListener("submit", function (event) {
+    .addEventListener(
+        "submit",
+        function (event) {
 
-        event.preventDefault();
-
-
-        const name =
-            document
-                .getElementById("newCustomerName")
-                .value
-                .trim();
-
-        const phone =
-            document
-                .getElementById("customerPhone")
-                .value
-                .trim();
+            event.preventDefault();
 
 
-        if (!name) {
+            const name =
+                document
+                    .getElementById(
+                        "newCustomerName"
+                    )
+                    .value
+                    .trim();
 
-            alert("Please enter the customer's name.");
 
-            return;
-        }
+            const phone =
+                document
+                    .getElementById(
+                        "customerPhone"
+                    )
+                    .value
+                    .trim();
 
 
-        const exists =
-            customers.some(function (customer) {
+            if (!name) {
 
-                return getCustomerName(customer)
-                    .toLowerCase() === name.toLowerCase();
+                alert(
+                    "Please enter the customer's name."
+                );
+
+                return;
+            }
+
+
+            const exists =
+                customers.some(
+                    function (customer) {
+
+                        return (
+                            getCustomerName(customer)
+                                .toLowerCase() ===
+                            name.toLowerCase()
+                        );
+
+                    }
+                );
+
+
+            if (exists) {
+
+                alert(
+                    "This customer already exists."
+                );
+
+                return;
+            }
+
+
+            customers.push({
+
+                name: name,
+
+                phone: phone
+
             });
 
 
-        if (exists) {
+            saveData();
 
-            alert("This customer already exists.");
+            displayCustomers();
 
-            return;
+            populateCustomerDropdown();
+
+            updateDashboard();
+
+
+            document
+                .getElementById("customerForm")
+                .reset();
+
+
+            customerModal.classList.add(
+                "hidden"
+            );
+
+
+            alert(
+                "Customer saved successfully!"
+            );
+
         }
-
-
-        customers.push({
-
-            name: name,
-            phone: phone
-
-        });
-
-
-        saveData();
-
-        displayCustomers();
-        populateCustomerDropdown();
-        updateDashboard();
-
-        document
-            .getElementById("customerForm")
-            .reset();
-
-        customerModal.classList.add("hidden");
-
-        alert("Customer saved successfully!");
-    });
+    );
 
 
 // ===============================
@@ -784,30 +1163,48 @@ document
 
 document
     .getElementById("addServiceBtn")
-    .addEventListener("click", function () {
+    .addEventListener(
+        "click",
+        function () {
 
-        document
-            .getElementById("serviceForm")
-            .reset();
+            document
+                .getElementById("serviceForm")
+                .reset();
 
-        serviceModal.classList.remove("hidden");
-    });
+            serviceModal.classList.remove(
+                "hidden"
+            );
+
+        }
+    );
 
 
 document
     .getElementById("closeServiceModalBtn")
-    .addEventListener("click", function () {
+    .addEventListener(
+        "click",
+        function () {
 
-        serviceModal.classList.add("hidden");
-    });
+            serviceModal.classList.add(
+                "hidden"
+            );
+
+        }
+    );
 
 
-serviceModal.addEventListener("click", function (event) {
+serviceModal.addEventListener(
+    "click",
+    function (event) {
 
-    if (event.target === serviceModal) {
-        serviceModal.classList.add("hidden");
+        if (event.target === serviceModal) {
+            serviceModal.classList.add(
+                "hidden"
+            );
+        }
+
     }
-});
+);
 
 
 // ===============================
@@ -816,133 +1213,184 @@ serviceModal.addEventListener("click", function (event) {
 
 document
     .getElementById("serviceForm")
-    .addEventListener("submit", function (event) {
+    .addEventListener(
+        "submit",
+        function (event) {
 
-        event.preventDefault();
-
-
-        const name =
-            document
-                .getElementById("newServiceName")
-                .value
-                .trim();
-
-        const price =
-            document
-                .getElementById("servicePrice")
-                .value;
-
-        const duration =
-            document
-                .getElementById("serviceDuration")
-                .value;
+            event.preventDefault();
 
 
-        if (!name || !price || !duration) {
+            const name =
+                document
+                    .getElementById(
+                        "newServiceName"
+                    )
+                    .value
+                    .trim();
 
-            alert("Please complete all service fields.");
 
-            return;
-        }
+            const price =
+                document
+                    .getElementById(
+                        "servicePrice"
+                    )
+                    .value;
 
 
-        const exists =
-            services.some(function (service) {
+            const duration =
+                document
+                    .getElementById(
+                        "serviceDuration"
+                    )
+                    .value;
 
-                return getServiceName(service)
-                    .toLowerCase() === name.toLowerCase();
+
+            if (
+                !name ||
+                !price ||
+                !duration
+            ) {
+
+                alert(
+                    "Please complete all service fields."
+                );
+
+                return;
+            }
+
+
+            const exists =
+                services.some(
+                    function (service) {
+
+                        return (
+                            getServiceName(service)
+                                .toLowerCase() ===
+                            name.toLowerCase()
+                        );
+
+                    }
+                );
+
+
+            if (exists) {
+
+                alert(
+                    "This service already exists."
+                );
+
+                return;
+            }
+
+
+            services.push({
+
+                name: name,
+
+                price: price,
+
+                duration: duration
+
             });
 
 
-        if (exists) {
+            saveData();
 
-            alert("This service already exists.");
+            displayServices();
 
-            return;
-        }
+            populateServiceDropdown();
 
-
-        services.push({
-
-            name: name,
-            price: price,
-            duration: duration
-
-        });
+            updateDashboard();
 
 
-        saveData();
-
-        displayServices();
-        populateServiceDropdown();
-        updateDashboard();
-
-        document
-            .getElementById("serviceForm")
-            .reset();
-
-        serviceModal.classList.add("hidden");
-
-        alert("Service saved successfully!");
-    });
+            document
+                .getElementById("serviceForm")
+                .reset();
 
 
-// ===============================
-// SEARCH + FILTER
-// ===============================
-
-document
-    .getElementById("searchAppointments")
-    .addEventListener("input", function () {
-
-        displayAppointments();
-    });
-
-
-document
-    .getElementById("statusFilter")
-    .addEventListener("change", function () {
-
-        displayAppointments();
-    });
-
-
-// ===============================
-// CLEAR ALL APPOINTMENTS
-// ===============================
-
-document
-    .getElementById("clearAppointmentsBtn")
-    .addEventListener("click", function () {
-
-        if (appointments.length === 0) {
-
-            alert("There are no appointments to clear.");
-
-            return;
-        }
-
-
-        const confirmed =
-            confirm(
-                "Are you sure you want to delete ALL appointments?"
+            serviceModal.classList.add(
+                "hidden"
             );
 
 
-        if (!confirmed) {
-            return;
+            alert(
+                "Service saved successfully!"
+            );
+
         }
+    );
 
 
-        appointments = [];
+// ===============================
+// SEARCH & FILTER
+// ===============================
 
-        saveData();
+document
+    .getElementById(
+        "searchAppointments"
+    )
+    .addEventListener(
+        "input",
+        displayAppointments
+    );
 
-        displayAppointments();
-        updateDashboard();
 
-        alert("All appointments have been deleted.");
-    });
+document
+    .getElementById(
+        "statusFilter"
+    )
+    .addEventListener(
+        "change",
+        displayAppointments
+    );
+
+
+// ===============================
+// CLEAR APPOINTMENTS
+// ===============================
+
+document
+    .getElementById(
+        "clearAppointmentsBtn"
+    )
+    .addEventListener(
+        "click",
+        function () {
+
+            if (appointments.length === 0) {
+
+                alert(
+                    "There are no appointments to clear."
+                );
+
+                return;
+            }
+
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete ALL appointments?"
+                )
+            ) {
+                return;
+            }
+
+
+            appointments = [];
+
+            saveData();
+
+            displayAppointments();
+
+            updateDashboard();
+
+
+            alert(
+                "All appointments have been deleted."
+            );
+
+        }
+    );
 
 
 // ===============================
