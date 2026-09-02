@@ -22,8 +22,13 @@ button {
     border: none;
 }
 
+
+/* =========================
+   TOP BAR
+========================= */
+
 .topbar {
-    background: #ffffff;
+    background: white;
     padding: 20px;
     display: flex;
     justify-content: space-between;
@@ -45,11 +50,21 @@ button {
     font-size: 14px;
 }
 
+
+/* =========================
+   CONTAINER
+========================= */
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 25px 18px 50px;
 }
+
+
+/* =========================
+   WELCOME
+========================= */
 
 .welcome-card {
     background: linear-gradient(135deg, #8b3d72, #b85c91);
@@ -66,6 +81,63 @@ button {
 .welcome-card p {
     opacity: 0.9;
 }
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.primary-btn,
+.small-btn,
+.save-btn,
+.danger-btn,
+.delete-btn,
+.edit-btn {
+    border-radius: 9px;
+    padding: 10px 15px;
+    font-weight: bold;
+}
+
+.primary-btn {
+    background: #8b3d72;
+    color: white;
+}
+
+.small-btn {
+    background: #f1dce9;
+    color: #8b3d72;
+    white-space: nowrap;
+}
+
+.save-btn {
+    width: 100%;
+    margin-top: 20px;
+    background: #8b3d72;
+    color: white;
+    padding: 13px;
+}
+
+.danger-btn,
+.delete-btn {
+    background: #f8dddd;
+    color: #a83232;
+}
+
+.delete-btn,
+.edit-btn {
+    font-size: 12px;
+    padding: 7px 10px;
+}
+
+.edit-btn {
+    background: #e6def5;
+    color: #67449a;
+}
+
+
+/* =========================
+   DASHBOARD
+========================= */
 
 .stats {
     display: grid;
@@ -90,9 +162,14 @@ button {
 }
 
 .stat-card strong {
-    font-size: 28px;
+    font-size: 27px;
     color: #8b3d72;
 }
+
+
+/* =========================
+   PANELS
+========================= */
 
 .management-grid {
     display: grid;
@@ -132,44 +209,10 @@ button {
     margin-top: 3px;
 }
 
-.primary-btn,
-.small-btn,
-.save-btn,
-.danger-btn,
-.delete-btn {
-    border-radius: 9px;
-    padding: 10px 15px;
-    font-weight: bold;
-}
 
-.primary-btn {
-    background: #8b3d72;
-    color: white;
-}
-
-.primary-btn:hover,
-.small-btn:hover,
-.save-btn:hover {
-    opacity: 0.9;
-}
-
-.small-btn {
-    background: #f1dce9;
-    color: #8b3d72;
-    white-space: nowrap;
-}
-
-.danger-btn {
-    background: #f8dddd;
-    color: #a83232;
-}
-
-.delete-btn {
-    background: #f8dddd;
-    color: #a83232;
-    font-size: 12px;
-    padding: 7px 10px;
-}
+/* =========================
+   FILTERS
+========================= */
 
 .filters {
     display: grid;
@@ -177,6 +220,11 @@ button {
     gap: 12px;
     margin-bottom: 18px;
 }
+
+
+/* =========================
+   INPUTS
+========================= */
 
 input,
 select {
@@ -194,18 +242,26 @@ select:focus {
     border-color: #8b3d72;
 }
 
+form label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 13px 0 6px;
+}
+
+
+/* =========================
+   CUSTOMER / SERVICE CARDS
+========================= */
+
 .customer-card,
-.service-card,
-.appointment-card {
+.service-card {
     border: 1px solid #eee5ef;
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 10px;
-    background: #fff;
-}
+    background: white;
 
-.customer-card,
-.service-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -224,7 +280,18 @@ select:focus {
     font-size: 13px;
 }
 
+
+/* =========================
+   APPOINTMENTS
+========================= */
+
 .appointment-card {
+    border: 1px solid #eee5ef;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background: white;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -259,6 +326,18 @@ select:focus {
     font-size: 13px;
 }
 
+.payment-info {
+    font-weight: bold;
+    color: #28733c;
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
 .status-badge {
     display: inline-block;
     padding: 5px 9px;
@@ -288,6 +367,11 @@ select:focus {
     color: #956000;
 }
 
+
+/* =========================
+   EMPTY MESSAGE
+========================= */
+
 .empty-message {
     text-align: center;
     color: #888;
@@ -295,13 +379,20 @@ select:focus {
     font-size: 14px;
 }
 
+
+/* =========================
+   MODALS
+========================= */
+
 .modal {
     position: fixed;
     inset: 0;
     background: rgba(30, 20, 30, 0.55);
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     padding: 20px;
     z-index: 100;
 }
@@ -315,6 +406,7 @@ select:focus {
     max-width: 480px;
     max-height: 90vh;
     overflow-y: auto;
+
     background: white;
     border-radius: 16px;
     padding: 22px;
@@ -338,22 +430,13 @@ select:focus {
     line-height: 1;
 }
 
-form label {
-    display: block;
-    font-weight: bold;
-    font-size: 14px;
-    margin: 13px 0 6px;
-}
 
-.save-btn {
-    width: 100%;
-    margin-top: 20px;
-    background: #8b3d72;
-    color: white;
-    padding: 13px;
-}
+/* =========================
+   MOBILE
+========================= */
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
+
     .stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -363,7 +446,9 @@ form label {
     }
 }
 
+
 @media (max-width: 600px) {
+
     .topbar {
         padding: 15px;
         align-items: flex-start;
@@ -399,7 +484,7 @@ form label {
     }
 
     .stat-card strong {
-        font-size: 23px;
+        font-size: 22px;
     }
 
     .panel {
@@ -421,6 +506,7 @@ form label {
 
     .appointment-actions {
         justify-content: space-between;
+        flex-wrap: wrap;
     }
 
     .appointment-actions select {
