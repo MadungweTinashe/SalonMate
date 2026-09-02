@@ -1,0 +1,133 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f5fb;
+    color: #222;
+}
+
+header {
+    background: #8b5cf6;
+    color: white;
+    padding: 24px 20px;
+    border-radius: 0 0 24px 24px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+header p {
+    margin: 8px 0 0;
+    opacity: 0.9;
+}
+
+main {
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+}
+
+.welcome {
+    margin-bottom: 20px;
+}
+
+.welcome h2 {
+    margin-bottom: 5px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.stat-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #8b5cf6;
+    margin-top: 8px;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.action-card {
+    background: white;
+    padding: 22px 15px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+}
+
+.action-card .icon {
+    font-size: 32px;
+}
+
+.action-card h3 {
+    margin: 10px 0 0;
+    font-size: 16px;
+}
+
+.add-button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    border: none;
+    border-radius: 15px;
+    background: #8b5cf6;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.section {
+    margin-top: 25px;
+}
+
+.section h2 {
+    font-size: 20px;
+}
+
+.empty {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    text-align: center;
+    color: #777;
+}
+
+footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: #888;
+    font-size: 13px;
+}
+
+@media (max-width: 400px) {
+    .stats,
+    .actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
