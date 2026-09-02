@@ -518,7 +518,7 @@ const status =
             serviceName: serviceName,
 
             date: date,
-            time; time,
+            time: time,
             status: status
         });
 
