@@ -3,515 +3,1147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>SalonMate</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from
+            "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signOut
+        } from
+            "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        /*
+        ==================================================
+        FIREBASE CONFIG
+        ==================================================
+
+        Replace ONLY the values below with the exact
+        configuration Firebase gave you.
+        */
+
+        const firebaseConfig = {
+
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+
+            authDomain: "PASTE_YOUR_AUTH_DOMAIN_HERE",
+
+            projectId: "PASTE_YOUR_PROJECT_ID_HERE",
+
+            storageBucket: "PASTE_YOUR_STORAGE_BUCKET_HERE",
+
+            messagingSenderId:
+                "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+
+            appId: "PASTE_YOUR_APP_ID_HERE"
+
+        };
+
+
+        // Start Firebase
+
+        const app =
+            initializeApp(firebaseConfig);
+
+
+        // Start Authentication
+
+        const auth =
+            getAuth(app);
+
+
+        // Make Firebase available to script.js
+
+        window.firebaseApp = app;
+
+        window.firebaseAuth = auth;
+
+        window.firebaseSignOut = signOut;
+
+
+        // Check whether user is logged in
+
+        onAuthStateChanged(
+            auth,
+            function (user) {
+
+                const loginScreen =
+                    document.getElementById("loginScreen");
+
+                const appScreen =
+                    document.getElementById("appScreen");
+
+                const userEmail =
+                    document.getElementById("userEmail");
+
+
+                if (user) {
+
+                    // User is logged in
+
+                    loginScreen.classList.add("hidden");
+
+                    appScreen.classList.remove("hidden");
+
+                    userEmail.textContent =
+                        user.email || "";
+
+                } else {
+
+                    // User is logged out
+
+                    loginScreen.classList.remove("hidden");
+
+                    appScreen.classList.add("hidden");
+
+                    userEmail.textContent = "";
+
+                }
+
+            }
+        );
+
+    </script>
 </head>
 
+
 <body>
+
+
+<!-- ==================================================
+     LOGIN SCREEN
+================================================== -->
+
+<section id="loginScreen" class="auth-screen">
+
+    <div class="auth-card">
+
+        <h1>SalonMate 💇🏽‍♀️</h1>
+
+        <p>
+            Salon management made simple.
+        </p>
+
+
+        <h2>Welcome</h2>
+
+        <p>
+            Please log in to your SalonMate account.
+        </p>
+
+
+        <form id="loginForm">
+
+            <label for="loginEmail">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Enter your email"
+                required
+            >
+
+
+            <label for="loginPassword">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Enter your password"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="save-btn">
+
+                Log In
+
+            </button>
+
+
+            <p
+                id="loginMessage"
+                class="auth-message">
+            </p>
+
+        </form>
+
+
+        <p class="auth-switch">
+
+            Don't have an account?
+
+            <button
+                type="button"
+                id="showSignupBtn"
+                class="link-btn">
+
+                Create Account
+
+            </button>
+
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+     SIGN UP SCREEN
+================================================== -->
+
+<section
+    id="signupScreen"
+    class="auth-screen hidden">
+
+
+    <div class="auth-card">
+
+        <h1>SalonMate 💇🏽‍♀️</h1>
+
+        <p>
+            Create your salon account.
+        </p>
+
+
+        <h2>Create Account</h2>
+
+
+        <form id="signupForm">
+
+            <label for="signupEmail">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="signupEmail"
+                placeholder="Enter your email"
+                required
+            >
+
+
+            <label for="signupPassword">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="signupPassword"
+                placeholder="At least 6 characters"
+                minlength="6"
+                required
+            >
+
+
+            <label for="signupPasswordConfirm">
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                id="signupPasswordConfirm"
+                placeholder="Repeat your password"
+                minlength="6"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="save-btn">
+
+                Create Account
+
+            </button>
+
+
+            <p
+                id="signupMessage"
+                class="auth-message">
+            </p>
+
+        </form>
+
+
+        <p class="auth-switch">
+
+            Already have an account?
+
+            <button
+                type="button"
+                id="showLoginBtn"
+                class="link-btn">
+
+                Log In
+
+            </button>
+
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+     MAIN SALONMATE APP
+================================================== -->
+
+<div
+    id="appScreen"
+    class="hidden">
+
 
 <header class="topbar">
 
     <div>
+
         <h1>SalonMate</h1>
-        <p>Salon management made simple</p>
+
+        <p>
+            Salon management made simple
+        </p>
+
     </div>
 
-    <button id="addAppointmentBtn" class="primary-btn">
-        + Appointment
-    </button>
+
+    <div>
+
+        <span id="userEmail"></span>
+
+        <button
+            id="logoutBtn"
+            class="small-btn">
+
+            Logout
+
+        </button>
+
+
+        <button
+            id="addAppointmentBtn"
+            class="primary-btn">
+
+            + Appointment
+
+        </button>
+
+    </div>
 
 </header>
 
 
 <main class="container">
 
-    <!-- DASHBOARD -->
 
-    <section class="welcome-card">
+<!-- ==================================================
+     DASHBOARD
+================================================== -->
 
-        <h2>Welcome to SalonMate 👋</h2>
+<section class="welcome-card">
+
+    <h2>
+        Welcome to SalonMate 👋
+    </h2>
+
+    <p>
+        Manage your salon, customers, services
+        and appointments.
+    </p>
+
+</section>
+
+
+<section class="stats">
+
+
+    <div class="stat-card">
+
+        <span>
+            Appointments
+        </span>
+
+        <strong id="totalAppointments">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Customers
+        </span>
+
+        <strong id="totalCustomers">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Services
+        </span>
+
+        <strong id="totalServices">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Today's Appointments
+        </span>
+
+        <strong id="todayAppointments">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Total Revenue
+        </span>
+
+        <strong id="totalRevenue">
+            R0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Today's Revenue
+        </span>
+
+        <strong id="todayRevenue">
+            R0
+        </strong>
+
+    </div>
+
+
+</section>
+
+
+<!-- ==================================================
+     CUSTOMERS + SERVICES
+================================================== -->
+
+<section class="management-grid">
+
+
+<!-- CUSTOMERS -->
+
+<div class="panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                Customers
+            </h2>
+
+            <p>
+                Manage your salon customers.
+            </p>
+
+        </div>
+
+
+        <button
+            id="addCustomerBtn"
+            class="small-btn">
+
+            + Customer
+
+        </button>
+
+    </div>
+
+
+    <div id="customersList"></div>
+
+</div>
+
+
+<!-- SERVICES -->
+
+<div class="panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                Services
+            </h2>
+
+            <p>
+                Manage your salon services.
+            </p>
+
+        </div>
+
+
+        <button
+            id="addServiceBtn"
+            class="small-btn">
+
+            + Service
+
+        </button>
+
+    </div>
+
+
+    <div id="servicesList"></div>
+
+</div>
+
+
+</section>
+
+
+<!-- ==================================================
+     APPOINTMENTS
+================================================== -->
+
+<section class="panel">
+
+
+<div class="panel-header appointment-header">
+
+    <div>
+
+        <h2>
+            Appointments
+        </h2>
 
         <p>
-            Manage your salon, customers, services and appointments.
+            View and manage your appointments.
         </p>
 
-    </section>
+    </div>
 
 
-    <section class="stats">
+    <button
+        id="clearAppointmentsBtn"
+        class="danger-btn">
 
-        <div class="stat-card">
-            <span>Appointments</span>
-            <strong id="totalAppointments">0</strong>
-        </div>
+        Clear All
 
-        <div class="stat-card">
-            <span>Customers</span>
-            <strong id="totalCustomers">0</strong>
-        </div>
+    </button>
 
-        <div class="stat-card">
-            <span>Services</span>
-            <strong id="totalServices">0</strong>
-        </div>
+</div>
 
-        <div class="stat-card">
-            <span>Today's Appointments</span>
-            <strong id="todayAppointments">0</strong>
-        </div>
 
-        <div class="stat-card">
-            <span>Total Revenue</span>
-            <strong id="totalRevenue">R0</strong>
-        </div>
+<div class="filters">
 
-        <div class="stat-card">
-            <span>Today's Revenue</span>
-            <strong id="todayRevenue">R0</strong>
-        </div>
+    <input
+        type="search"
+        id="searchAppointments"
+        placeholder="Search appointments..."
+    >
 
-    </section>
 
+    <select id="statusFilter">
 
-    <!-- CUSTOMERS AND SERVICES -->
+        <option value="All">
+            All statuses
+        </option>
 
-    <section class="management-grid">
+        <option value="Booked">
+            Booked
+        </option>
 
+        <option value="Completed">
+            Completed
+        </option>
 
-        <!-- CUSTOMERS -->
+        <option value="Cancelled">
+            Cancelled
+        </option>
 
-        <div class="panel">
+        <option value="No-show">
+            No-show
+        </option>
 
-            <div class="panel-header">
+    </select>
 
-                <div>
-                    <h2>Customers</h2>
+</div>
 
-                    <p>
-                        Manage your salon customers.
-                    </p>
-                </div>
 
-                <button
-                    id="addCustomerBtn"
-                    class="small-btn">
+<div id="appointmentsList"></div>
 
-                    + Customer
 
-                </button>
+</section>
 
-            </div>
-
-
-            <div id="customersList"></div>
-
-        </div>
-
-
-        <!-- SERVICES -->
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-                    <h2>Services</h2>
-
-                    <p>
-                        Manage your salon services.
-                    </p>
-                </div>
-
-                <button
-                    id="addServiceBtn"
-                    class="small-btn">
-
-                    + Service
-
-                </button>
-
-            </div>
-
-
-            <div id="servicesList"></div>
-
-        </div>
-
-    </section>
-
-
-    <!-- APPOINTMENTS -->
-
-    <section class="panel">
-
-        <div class="panel-header appointment-header">
-
-            <div>
-
-                <h2>Appointments</h2>
-
-                <p>
-                    View and manage your appointments.
-                </p>
-
-            </div>
-
-
-            <button
-                id="clearAppointmentsBtn"
-                class="danger-btn">
-
-                Clear All
-
-            </button>
-
-        </div>
-
-
-        <div class="filters">
-
-            <input
-                type="search"
-                id="searchAppointments"
-                placeholder="Search appointments..."
-            >
-
-
-            <select id="statusFilter">
-
-                <option value="All">
-                    All statuses
-                </option>
-
-                <option value="Booked">
-                    Booked
-                </option>
-
-                <option value="Completed">
-                    Completed
-                </option>
-
-                <option value="Cancelled">
-                    Cancelled
-                </option>
-
-                <option value="No-show">
-                    No-show
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div id="appointmentsList"></div>
-
-    </section>
 
 </main>
 
 
-<!-- APPOINTMENT MODAL -->
+<!-- ==================================================
+     APPOINTMENT MODAL
+================================================== -->
 
 <div
     id="appointmentModal"
     class="modal hidden">
 
 
-    <div class="modal-content">
+<div class="modal-content">
 
 
-        <div class="modal-header">
+<div class="modal-header">
 
-            <h2 id="appointmentModalTitle">
-                New Appointment
-            </h2>
-
-
-            <button
-                id="closeModalBtn"
-                class="close-btn">
-
-                ×
-
-            </button>
-
-        </div>
+    <h2 id="appointmentModalTitle">
+        New Appointment
+    </h2>
 
 
-        <form id="appointmentForm">
+    <button
+        id="closeModalBtn"
+        class="close-btn">
 
+        ×
 
-            <label for="customerName">
-                Customer
-            </label>
-
-
-            <select
-                id="customerName"
-                required>
-
-                <option value="">
-                    Select customer
-                </option>
-
-            </select>
-
-
-            <label for="serviceName">
-                Service
-            </label>
-
-
-            <select
-                id="serviceName"
-                required>
-
-                <option value="">
-                    Select service
-                </option>
-
-            </select>
-
-
-            <label for="appointmentDate">
-                Date
-            </label>
-
-
-            <input
-                type="date"
-                id="appointmentDate"
-                required
-            >
-
-
-            <label for="appointmentTime">
-                Time
-            </label>
-
-
-            <input
-                type="time"
-                id="appointmentTime"
-                required
-            >
-
-
-            <label for="appointmentStatus">
-                Status
-            </label>
-
-
-            <select
-                id="appointmentStatus"
-                required>
-
-                <option value="Booked">
-                    Booked
-                </option>
-
-                <option value="Completed">
-                    Completed
-                </option>
-
-                <option value="Cancelled">
-                    Cancelled
-                </option>
-
-                <option value="No-show">
-                    No-show
-                </option>
-
-            </select>
-
-
-            <label for="appointmentPayment">
-                Payment (R)
-            </label>
-
-
-            <input
-                type="number"
-                id="appointmentPayment"
-                min="0"
-                step="0.01"
-                placeholder="0"
-            >
-
-
-            <button
-                type="submit"
-                class="save-btn">
-
-                Save Appointment
-
-            </button>
-
-
-        </form>
-
-    </div>
+    </button>
 
 </div>
 
 
-<!-- CUSTOMER MODAL -->
+<form id="appointmentForm">
+
+
+<label for="customerName">
+    Customer
+</label>
+
+
+<select
+    id="customerName"
+    required>
+
+    <option value="">
+        Select customer
+    </option>
+
+</select>
+
+
+<label for="serviceName">
+    Service
+</label>
+
+
+<select
+    id="serviceName"
+    required>
+
+    <option value="">
+        Select service
+    </option>
+
+</select>
+
+
+<label for="appointmentDate">
+    Date
+</label>
+
+
+<input
+    type="date"
+    id="appointmentDate"
+    required
+>
+
+
+<label for="appointmentTime">
+    Time
+</label>
+
+
+<input
+    type="time"
+    id="appointmentTime"
+    required
+>
+
+
+<label for="appointmentStatus">
+    Status
+</label>
+
+
+<select
+    id="appointmentStatus"
+    required>
+
+    <option value="Booked">
+        Booked
+    </option>
+
+    <option value="Completed">
+        Completed
+    </option>
+
+    <option value="Cancelled">
+        Cancelled
+    </option>
+
+    <option value="No-show">
+        No-show
+    </option>
+
+</select>
+
+
+<label for="appointmentPayment">
+    Payment (R)
+</label>
+
+
+<input
+    type="number"
+    id="appointmentPayment"
+    min="0"
+    step="0.01"
+    placeholder="0"
+>
+
+
+<button
+    type="submit"
+    class="save-btn">
+
+    Save Appointment
+
+</button>
+
+
+</form>
+
+</div>
+
+</div>
+
+
+<!-- ==================================================
+     CUSTOMER MODAL
+================================================== -->
 
 <div
     id="customerModal"
     class="modal hidden">
 
 
-    <div class="modal-content">
+<div class="modal-content">
 
 
-        <div class="modal-header">
+<div class="modal-header">
 
-            <h2>New Customer</h2>
-
-
-            <button
-                id="closeCustomerModalBtn"
-                class="close-btn">
-
-                ×
-
-            </button>
-
-        </div>
+    <h2>
+        New Customer
+    </h2>
 
 
-        <form id="customerForm">
+    <button
+        id="closeCustomerModalBtn"
+        class="close-btn">
 
+        ×
 
-            <label for="newCustomerName">
-                Customer Name
-            </label>
-
-
-            <input
-                type="text"
-                id="newCustomerName"
-                placeholder="Enter customer name"
-                required
-            >
-
-
-            <label for="customerPhone">
-                Phone Number
-            </label>
-
-
-            <input
-                type="tel"
-                id="customerPhone"
-                placeholder="Enter phone number"
-            >
-
-
-            <button
-                type="submit"
-                class="save-btn">
-
-                Save Customer
-
-            </button>
-
-        </form>
-
-    </div>
+    </button>
 
 </div>
 
 
-<!-- SERVICE MODAL -->
+<form id="customerForm">
+
+
+<label for="newCustomerName">
+    Customer Name
+</label>
+
+
+<input
+    type="text"
+    id="newCustomerName"
+    placeholder="Enter customer name"
+    required
+>
+
+
+<label for="customerPhone">
+    Phone Number
+</label>
+
+
+<input
+    type="tel"
+    id="customerPhone"
+    placeholder="Enter phone number"
+>
+
+
+<button
+    type="submit"
+    class="save-btn">
+
+    Save Customer
+
+</button>
+
+
+</form>
+
+</div>
+
+</div>
+
+
+<!-- ==================================================
+     SERVICE MODAL
+================================================== -->
 
 <div
     id="serviceModal"
     class="modal hidden">
 
 
-    <div class="modal-content">
+<div class="modal-content">
 
 
-        <div class="modal-header">
+<div class="modal-header">
 
-            <h2>New Service</h2>
-
-
-            <button
-                id="closeServiceModalBtn"
-                class="close-btn">
-
-                ×
-
-            </button>
-
-        </div>
+    <h2>
+        New Service
+    </h2>
 
 
-        <form id="serviceForm">
+    <button
+        id="closeServiceModalBtn"
+        class="close-btn">
 
+        ×
 
-            <label for="newServiceName">
-                Service Name
-            </label>
-
-
-            <input
-                type="text"
-                id="newServiceName"
-                placeholder="e.g. Braids"
-                required
-            >
-
-
-            <label for="servicePrice">
-                Price (R)
-            </label>
-
-
-            <input
-                type="number"
-                id="servicePrice"
-                min="0"
-                step="0.01"
-                placeholder="250"
-                required
-            >
-
-
-            <label for="serviceDuration">
-                Duration (minutes)
-            </label>
-
-
-            <input
-                type="number"
-                id="serviceDuration"
-                min="1"
-                placeholder="120"
-                required
-            >
-
-
-            <button
-                type="submit"
-                class="save-btn">
-
-                Save Service
-
-            </button>
-
-        </form>
-
-    </div>
+    </button>
 
 </div>
 
 
+<form id="serviceForm">
+
+
+<label for="newServiceName">
+    Service Name
+</label>
+
+
+<input
+    type="text"
+    id="newServiceName"
+    placeholder="e.g. Braids"
+    required
+>
+
+
+<label for="servicePrice">
+    Price (R)
+</label>
+
+
+<input
+    type="number"
+    id="servicePrice"
+    min="0"
+    step="0.01"
+    placeholder="250"
+    required
+>
+
+
+<label for="serviceDuration">
+    Duration (minutes)
+</label>
+
+
+<input
+    type="number"
+    id="serviceDuration"
+    min="1"
+    placeholder="120"
+    required
+>
+
+
+<button
+    type="submit"
+    class="save-btn">
+
+    Save Service
+
+</button>
+
+
+</form>
+
+</div>
+
+</div>
+
+
+<!-- Existing SalonMate JavaScript -->
+
 <script src="script.js"></script>
+
+
+<!-- ==================================================
+     LOGIN / SIGNUP LOGIC
+================================================== -->
+
+<script type="module">
+
+    import {
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword
+    } from
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+    const auth =
+        window.firebaseAuth;
+
+
+    // -------------------------------
+    // SHOW SIGNUP
+    // -------------------------------
+
+    document
+        .getElementById("showSignupBtn")
+        .addEventListener(
+            "click",
+            function () {
+
+                document
+                    .getElementById("loginScreen")
+                    .classList.add("hidden");
+
+                document
+                    .getElementById("signupScreen")
+                    .classList.remove("hidden");
+
+            }
+        );
+
+
+    // -------------------------------
+    // SHOW LOGIN
+    // -------------------------------
+
+    document
+        .getElementById("showLoginBtn")
+        .addEventListener(
+            "click",
+            function () {
+
+                document
+                    .getElementById("signupScreen")
+                    .classList.add("hidden");
+
+                document
+                    .getElementById("loginScreen")
+                    .classList.remove("hidden");
+
+            }
+        );
+
+
+    // -------------------------------
+    // SIGN UP
+    // -------------------------------
+
+    document
+        .getElementById("signupForm")
+        .addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                const email =
+                    document
+                        .getElementById("signupEmail")
+                        .value
+                        .trim();
+
+
+                const password =
+                    document
+                        .getElementById("signupPassword")
+                        .value;
+
+
+                const confirmPassword =
+                    document
+                        .getElementById(
+                            "signupPasswordConfirm"
+                        )
+                        .value;
+
+
+                const message =
+                    document
+                        .getElementById(
+                            "signupMessage"
+                        );
+
+
+                if (
+                    password !==
+                    confirmPassword
+                ) {
+
+                    message.textContent =
+                        "Passwords do not match.";
+
+                    return;
+                }
+
+
+                try {
+
+                    await createUserWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+
+                    message.textContent =
+                        "Account created successfully!";
+
+
+                } catch (error) {
+
+                    message.textContent =
+                        error.message;
+
+                }
+
+            }
+        );
+
+
+    // -------------------------------
+    // LOGIN
+    // -------------------------------
+
+    document
+        .getElementById("loginForm")
+        .addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                const email =
+                    document
+                        .getElementById("loginEmail")
+                        .value
+                        .trim();
+
+
+                const password =
+                    document
+                        .getElementById("loginPassword")
+                        .value;
+
+
+                const message =
+                    document
+                        .getElementById(
+                            "loginMessage"
+                        );
+
+
+                try {
+
+                    await signInWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+
+                    message.textContent =
+                        "Logged in successfully!";
+
+
+                } catch (error) {
+
+                    message.textContent =
+                        "Incorrect email or password.";
+
+                }
+
+            }
+        );
+
+
+    // -------------------------------
+    // LOGOUT
+    // -------------------------------
+
+    document
+        .getElementById("logoutBtn")
+        .addEventListener(
+            "click",
+            async function () {
+
+                await window.firebaseSignOut(
+                    auth
+                );
+
+            }
+        );
+
+</script>
+
+
+</div>
 
 </body>
 </html> 
