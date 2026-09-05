@@ -1,799 +1,1768 @@
-let appointments =
-    JSON.parse(localStorage.getItem("salonMateAppointments")) || [];
+// ==================================================
+// SALONMATE - FIREBASE VERSION
+// ==================================================
 
-let customers =
-    JSON.parse(localStorage.getItem("salonMateCustomers")) || [];
+let appointments = [];
+let customers = [];
+let services = [];
 
-let services =
-    JSON.parse(localStorage.getItem("salonMateServices")) || [];
+let editingAppointmentId = null;
 
-let editingAppointmentIndex = null;
+let db = null;
+let currentUser = null;
 
 
-// ===============================
-// SAVE DATA
-// ===============================
+// ==================================================
+// FIREBASE SETUP
+// ==================================================
 
-function saveData() {
+async function startFirebase() {
 
-    localStorage.setItem(
-        "salonMateAppointments",
-        JSON.stringify(appointments)
-    );
+    try {
 
-    localStorage.setItem(
-        "salonMateCustomers",
-        JSON.stringify(customers)
-    );
+        const firestore =
+            await import(
+                "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+            );
 
-    localStorage.setItem(
-        "salonMateServices",
-        JSON.stringify(services)
+
+        db = firestore.getFirestore(
+            window.firebaseApp
+        );
+
+
+        window.firestoreFunctions = firestore;
+
+
+        waitForUser();
+
+
+    } catch (error) {
+
+        console.error(
+            "Firebase setup error:",
+            error
+        );
+
+    }
+}
+
+
+// ==================================================
+// WAIT FOR LOGIN
+// ==================================================
+
+function waitForUser() {
+
+    const auth =
+        window.firebaseAuth;
+
+
+    if (!auth) {
+
+        setTimeout(
+            waitForUser,
+            200
+        );
+
+        return;
+    }
+
+
+    auth.onAuthStateChanged(
+        async function (user) {
+
+            if (!user) {
+
+                currentUser = null;
+
+                return;
+            }
+
+
+            currentUser = user;
+
+
+            await loadUserData();
+
+
+            displayCustomers();
+
+            displayServices();
+
+            populateCustomerDropdown();
+
+            populateServiceDropdown();
+
+            displayAppointments();
+
+            updateDashboard();
+
+        }
     );
 }
 
 
-// ===============================
-// HELPERS
-// ===============================
+// ==================================================
+// FIRESTORE PATHS
+// ==================================================
 
-function getCustomerName(customer) {
+function userCollection(
+    collectionName
+) {
+
+    return window.firestoreFunctions.collection(
+        db,
+        "users",
+        currentUser.uid,
+        collectionName
+    );
+
+}
+
+
+// ==================================================
+// LOAD USER DATA
+// ==================================================
+
+async function loadUserData() {
+
+    if (!currentUser || !db) {
+        return;
+    }
+
+
+    const {
+        getDocs,
+        query,
+        orderBy
+    } = window.firestoreFunctions;
+
+
+    try {
+
+        const customerSnapshot =
+            await getDocs(
+                userCollection("customers")
+            );
+
+
+        customers =
+            customerSnapshot.docs.map(
+                function (doc) {
+
+                    return {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+
+                }
+            );
+
+
+        const serviceSnapshot =
+            await getDocs(
+                userCollection("services")
+            );
+
+
+        services =
+            serviceSnapshot.docs.map(
+                function (doc) {
+
+                    return {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+
+                }
+            );
+
+
+        const appointmentSnapshot =
+            await getDocs(
+                userCollection("appointments")
+            );
+
+
+        appointments =
+            appointmentSnapshot.docs.map(
+                function (doc) {
+
+                    return {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+
+                }
+            );
+
+
+        // If the cloud account is empty,
+        // move the old local data to the account.
+
+        if (
+            customers.length === 0 &&
+            services.length === 0 &&
+            appointments.length === 0
+        ) {
+
+            await migrateOldLocalData();
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load SalonMate data:",
+            error
+        );
+
+        alert(
+            "SalonMate could not load your cloud data. Please check your internet connection."
+        );
+
+    }
+
+}
+
+
+// ==================================================
+// MIGRATE OLD LOCAL DATA
+// ==================================================
+
+async function migrateOldLocalData() {
+
+    const oldAppointments =
+        JSON.parse(
+            localStorage.getItem(
+                "salonMateAppointments"
+            )
+        ) || [];
+
+
+    const oldCustomers =
+        JSON.parse(
+            localStorage.getItem(
+                "salonMateCustomers"
+            )
+        ) || [];
+
+
+    const oldServices =
+        JSON.parse(
+            localStorage.getItem(
+                "salonMateServices"
+            )
+        ) || [];
+
+
+    if (
+        oldAppointments.length === 0 &&
+        oldCustomers.length === 0 &&
+        oldServices.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        addDoc
+    } = window.firestoreFunctions;
+
+
+    try {
+
+        for (
+            const customer of oldCustomers
+        ) {
+
+            const customerData =
+                typeof customer === "string"
+                    ? {
+                        name: customer,
+                        phone: ""
+                    }
+                    : customer;
+
+
+            await addDoc(
+                userCollection("customers"),
+                {
+                    name:
+                        customerData.name || "",
+                    phone:
+                        customerData.phone || ""
+                }
+            );
+
+        }
+
+
+        for (
+            const service of oldServices
+        ) {
+
+            const serviceData =
+                typeof service === "string"
+                    ? {
+                        name: service,
+                        price: "",
+                        duration: ""
+                    }
+                    : service;
+
+
+            await addDoc(
+                userCollection("services"),
+                {
+                    name:
+                        serviceData.name || "",
+                    price:
+                        serviceData.price || "",
+                    duration:
+                        serviceData.duration || ""
+                }
+            );
+
+        }
+
+
+        for (
+            const appointment
+            of oldAppointments
+        ) {
+
+            await addDoc(
+                userCollection("appointments"),
+                {
+                    customer:
+                        appointment.customer || "",
+
+                    service:
+                        appointment.service || "",
+
+                    date:
+                        appointment.date || "",
+
+                    time:
+                        appointment.time || "",
+
+                    status:
+                        appointment.status || "Booked",
+
+                    payment:
+                        Number(
+                            appointment.payment
+                        ) || 0
+                }
+            );
+
+        }
+
+
+        // Reload from Firebase
+
+        await loadUserData();
+
+
+        // Old local data is no longer needed
+
+        localStorage.removeItem(
+            "salonMateAppointments"
+        );
+
+        localStorage.removeItem(
+            "salonMateCustomers"
+        );
+
+        localStorage.removeItem(
+            "salonMateServices"
+        );
+
+
+        alert(
+            "Your existing SalonMate data has been moved to your account."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Data migration failed:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==================================================
+// HELPERS
+// ==================================================
+
+function getCustomerName(
+    customer
+) {
+
     return typeof customer === "string"
         ? customer
         : customer.name || "";
+
 }
 
-function getCustomerPhone(customer) {
+
+function getCustomerPhone(
+    customer
+) {
+
     return typeof customer === "string"
         ? ""
         : customer.phone || "";
+
 }
 
-function getServiceName(service) {
+
+function getServiceName(
+    service
+) {
+
     return typeof service === "string"
         ? service
         : service.name || "";
+
 }
 
-function getServicePrice(service) {
+
+function getServicePrice(
+    service
+) {
+
     return typeof service === "string"
         ? ""
         : service.price || "";
+
 }
 
-function getServiceDuration(service) {
+
+function getServiceDuration(
+    service
+) {
+
     return typeof service === "string"
         ? ""
         : service.duration || "";
+
 }
 
-function getAppointmentStatus(appointment) {
+
+function getAppointmentStatus(
+    appointment
+) {
+
     return appointment.status || "Booked";
+
 }
 
-function getPayment(appointment) {
-    return Number(appointment.payment) || 0;
+
+function getPayment(
+    appointment
+) {
+
+    return Number(
+        appointment.payment
+    ) || 0;
+
 }
+
 
 function getToday() {
 
-    const today = new Date();
+    const today =
+        new Date();
 
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
+
+    const year =
+        today.getFullYear();
+
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
 
     return `${year}-${month}-${day}`;
-}
 
-function escapeHTML(value) {
-
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 
-// ===============================
+function escapeHTML(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// ==================================================
 // DASHBOARD
-// ===============================
+// ==================================================
 
 function updateDashboard() {
 
-    document.getElementById("totalAppointments").textContent =
+    document.getElementById(
+        "totalAppointments"
+    ).textContent =
         appointments.length;
 
-    document.getElementById("totalCustomers").textContent =
+
+    document.getElementById(
+        "totalCustomers"
+    ).textContent =
         customers.length;
 
-    document.getElementById("totalServices").textContent =
+
+    document.getElementById(
+        "totalServices"
+    ).textContent =
         services.length;
 
 
-    const today = getToday();
+    const today =
+        getToday();
 
 
     const todayAppointments =
-        appointments.filter(function (appointment) {
+        appointments.filter(
+            function (appointment) {
 
-            return appointment.date === today &&
-                getAppointmentStatus(appointment) !== "Cancelled";
+                return (
+                    appointment.date === today &&
+                    getAppointmentStatus(
+                        appointment
+                    ) !== "Cancelled"
+                );
 
-        }).length;
+            }
+        ).length;
 
 
-    document.getElementById("todayAppointments").textContent =
+    document.getElementById(
+        "todayAppointments"
+    ).textContent =
         todayAppointments;
 
 
     const totalRevenue =
-        appointments.reduce(function (total, appointment) {
+        appointments.reduce(
+            function (
+                total,
+                appointment
+            ) {
 
-            if (getAppointmentStatus(appointment) === "Cancelled") {
-                return total;
-            }
+                if (
+                    getAppointmentStatus(
+                        appointment
+                    ) === "Cancelled"
+                ) {
 
-            return total + getPayment(appointment);
+                    return total;
 
-        }, 0);
+                }
+
+
+                return (
+                    total +
+                    getPayment(
+                        appointment
+                    )
+                );
+
+            },
+            0
+        );
 
 
     const todayRevenue =
-        appointments.reduce(function (total, appointment) {
-
-            if (
-                appointment.date === today &&
-                getAppointmentStatus(appointment) !== "Cancelled"
+        appointments.reduce(
+            function (
+                total,
+                appointment
             ) {
-                return total + getPayment(appointment);
-            }
 
-            return total;
+                if (
+                    appointment.date === today &&
+                    getAppointmentStatus(
+                        appointment
+                    ) !== "Cancelled"
+                ) {
 
-        }, 0);
+                    return (
+                        total +
+                        getPayment(
+                            appointment
+                        )
+                    );
+
+                }
 
 
-    document.getElementById("totalRevenue").textContent =
+                return total;
+
+            },
+            0
+        );
+
+
+    document.getElementById(
+        "totalRevenue"
+    ).textContent =
         `R${totalRevenue.toFixed(2)}`;
 
-    document.getElementById("todayRevenue").textContent =
+
+    document.getElementById(
+        "todayRevenue"
+    ).textContent =
         `R${todayRevenue.toFixed(2)}`;
+
 }
 
 
-// ===============================
+// ==================================================
 // CUSTOMERS
-// ===============================
+// ==================================================
 
 function displayCustomers() {
 
     const list =
-        document.getElementById("customersList");
+        document.getElementById(
+            "customersList"
+        );
 
 
-    if (customers.length === 0) {
+    if (!list) {
+        return;
+    }
+
+
+    if (
+        customers.length === 0
+    ) {
 
         list.innerHTML =
-            `<div class="empty-message">
-                No customers yet. Add your first customer.
-            </div>`;
+            `
+            <div class="empty-message">
+                No customers yet.
+                Add your first customer.
+            </div>
+            `;
 
         return;
+
     }
 
 
     list.innerHTML =
-        customers.map(function (customer, index) {
+        customers.map(
+            function (
+                customer
+            ) {
 
-            const name = getCustomerName(customer);
-            const phone = getCustomerPhone(customer);
+                const name =
+                    getCustomerName(
+                        customer
+                    );
 
 
-            return `
-                <div class="customer-card">
+                const phone =
+                    getCustomerPhone(
+                        customer
+                    );
 
-                    <div class="customer-info">
 
-                        <strong>
-                            ${escapeHTML(name)}
-                        </strong>
+                return `
+                    <div class="customer-card">
 
-                        <span>
-                            ${phone
-                                ? escapeHTML(phone)
-                                : "No phone number"}
-                        </span>
+                        <div class="customer-info">
+
+                            <strong>
+                                ${escapeHTML(name)}
+                            </strong>
+
+                            <span>
+                                ${
+                                    phone
+                                        ? escapeHTML(phone)
+                                        : "No phone number"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <button
+                            class="delete-btn"
+                            onclick="
+                                deleteCustomer(
+                                    '${customer.id}'
+                                )
+                            "
+                        >
+                            Delete
+                        </button>
 
                     </div>
+                `;
 
+            }
+        ).join("");
 
-                    <button
-                        class="delete-btn"
-                        onclick="deleteCustomer(${index})">
-
-                        Delete
-
-                    </button>
-
-                </div>
-            `;
-
-        }).join("");
 }
 
 
-function deleteCustomer(index) {
+// ==================================================
+// DELETE CUSTOMER
+// ==================================================
 
-    const name =
-        getCustomerName(customers[index]);
+async function deleteCustomer(
+    id
+) {
+
+    const customer =
+        customers.find(
+            function (item) {
+
+                return item.id === id;
+
+            }
+        );
 
 
-    if (!confirm(`Delete customer "${name}"?`)) {
+    if (!customer) {
         return;
     }
 
 
-    customers.splice(index, 1);
+    if (
+        !confirm(
+            `Delete customer "${getCustomerName(customer)}"?`
+        )
+    ) {
 
-    saveData();
+        return;
 
-    displayCustomers();
-    populateCustomerDropdown();
-    updateDashboard();
+    }
+
+
+    const {
+        deleteDoc,
+        doc
+    } = window.firestoreFunctions;
+
+
+    try {
+
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                currentUser.uid,
+                "customers",
+                id
+            )
+        );
+
+
+        customers =
+            customers.filter(
+                function (item) {
+
+                    return item.id !== id;
+
+                }
+            );
+
+
+        displayCustomers();
+
+        populateCustomerDropdown();
+
+        updateDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            "Could not delete customer."
+        );
+
+    }
+
 }
 
 
-// ===============================
+// ==================================================
 // SERVICES
-// ===============================
+// ==================================================
 
 function displayServices() {
 
     const list =
-        document.getElementById("servicesList");
+        document.getElementById(
+            "servicesList"
+        );
 
 
-    if (services.length === 0) {
+    if (!list) {
+        return;
+    }
+
+
+    if (
+        services.length === 0
+    ) {
 
         list.innerHTML =
-            `<div class="empty-message">
-                No services yet. Add your first service.
-            </div>`;
+            `
+            <div class="empty-message">
+                No services yet.
+                Add your first service.
+            </div>
+            `;
 
         return;
+
     }
 
 
     list.innerHTML =
-        services.map(function (service, index) {
+        services.map(
+            function (
+                service
+            ) {
 
-            const name = getServiceName(service);
-            const price = getServicePrice(service);
-            const duration = getServiceDuration(service);
-
-
-            let details = "";
-
-
-            if (price !== "") {
-                details += `R${escapeHTML(price)}`;
-            }
+                const name =
+                    getServiceName(
+                        service
+                    );
 
 
-            if (duration !== "") {
+                const price =
+                    getServicePrice(
+                        service
+                    );
 
-                if (details !== "") {
-                    details += " • ";
+
+                const duration =
+                    getServiceDuration(
+                        service
+                    );
+
+
+                let details = "";
+
+
+                if (price !== "") {
+
+                    details +=
+                        `R${escapeHTML(price)}`;
+
                 }
 
-                details +=
-                    `${escapeHTML(duration)} min`;
-            }
+
+                if (
+                    duration !== ""
+                ) {
+
+                    if (details !== "") {
+                        details += " • ";
+                    }
 
 
-            if (!details) {
-                details = "No price or duration";
-            }
+                    details +=
+                        `${escapeHTML(duration)} min`;
+
+                }
 
 
-            return `
-                <div class="service-card">
+                if (!details) {
 
-                    <div class="service-info">
+                    details =
+                        "No price or duration";
 
-                        <strong>
-                            ${escapeHTML(name)}
-                        </strong>
+                }
 
-                        <span>
-                            ${details}
-                        </span>
+
+                return `
+                    <div class="service-card">
+
+                        <div class="service-info">
+
+                            <strong>
+                                ${escapeHTML(name)}
+                            </strong>
+
+                            <span>
+                                ${details}
+                            </span>
+
+                        </div>
+
+
+                        <button
+                            class="delete-btn"
+                            onclick="
+                                deleteService(
+                                    '${service.id}'
+                                )
+                            "
+                        >
+                            Delete
+                        </button>
 
                     </div>
+                `;
 
+            }
+        ).join("");
 
-                    <button
-                        class="delete-btn"
-                        onclick="deleteService(${index})">
-
-                        Delete
-
-                    </button>
-
-                </div>
-            `;
-
-        }).join("");
 }
 
 
-function deleteService(index) {
+// ==================================================
+// DELETE SERVICE
+// ==================================================
 
-    const name =
-        getServiceName(services[index]);
+async function deleteService(
+    id
+) {
+
+    const service =
+        services.find(
+            function (item) {
+
+                return item.id === id;
+
+            }
+        );
 
 
-    if (!confirm(`Delete service "${name}"?`)) {
+    if (!service) {
         return;
     }
 
 
-    services.splice(index, 1);
+    if (
+        !confirm(
+            `Delete service "${getServiceName(service)}"?`
+        )
+    ) {
 
-    saveData();
+        return;
 
-    displayServices();
-    populateServiceDropdown();
-    updateDashboard();
+    }
+
+
+    const {
+        deleteDoc,
+        doc
+    } = window.firestoreFunctions;
+
+
+    try {
+
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                currentUser.uid,
+                "services",
+                id
+            )
+        );
+
+
+        services =
+            services.filter(
+                function (item) {
+
+                    return item.id !== id;
+
+                }
+            );
+
+
+        displayServices();
+
+        populateServiceDropdown();
+
+        updateDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            "Could not delete service."
+        );
+
+    }
+
 }
 
 
-// ===============================
+// ==================================================
 // DROPDOWNS
-// ===============================
+// ==================================================
 
 function populateCustomerDropdown() {
 
     const select =
-        document.getElementById("customerName");
+        document.getElementById(
+            "customerName"
+        );
+
+
+    if (!select) {
+        return;
+    }
 
 
     select.innerHTML =
-        `<option value="">Select customer</option>`;
+        `
+        <option value="">
+            Select customer
+        </option>
+        `;
 
 
-    customers.forEach(function (customer) {
+    customers.forEach(
+        function (
+            customer
+        ) {
 
-        const name =
-            getCustomerName(customer);
-
-
-        const option =
-            document.createElement("option");
-
-
-        option.value = name;
-        option.textContent = name;
+            const option =
+                document.createElement(
+                    "option"
+                );
 
 
-        select.appendChild(option);
-    });
+            option.value =
+                getCustomerName(
+                    customer
+                );
+
+
+            option.textContent =
+                getCustomerName(
+                    customer
+                );
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
 }
 
 
 function populateServiceDropdown() {
 
     const select =
-        document.getElementById("serviceName");
+        document.getElementById(
+            "serviceName"
+        );
+
+
+    if (!select) {
+        return;
+    }
 
 
     select.innerHTML =
-        `<option value="">Select service</option>`;
+        `
+        <option value="">
+            Select service
+        </option>
+        `;
 
 
-    services.forEach(function (service) {
+    services.forEach(
+        function (
+            service
+        ) {
 
-        const name =
-            getServiceName(service);
-
-
-        const option =
-            document.createElement("option");
-
-
-        option.value = name;
-        option.textContent = name;
+            const option =
+                document.createElement(
+                    "option"
+                );
 
 
-        select.appendChild(option);
-    });
+            option.value =
+                getServiceName(
+                    service
+                );
+
+
+            option.textContent =
+                getServiceName(
+                    service
+                );
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
 }
 
 
-// ===============================
+// ==================================================
 // APPOINTMENTS
-// ===============================
+// ==================================================
 
 function displayAppointments() {
 
     const list =
-        document.getElementById("appointmentsList");
+        document.getElementById(
+            "appointmentsList"
+        );
+
+
+    if (!list) {
+        return;
+    }
 
 
     const search =
         document
-            .getElementById("searchAppointments")
+            .getElementById(
+                "searchAppointments"
+            )
             .value
             .toLowerCase()
             .trim();
 
 
     const statusFilter =
-        document.getElementById("statusFilter").value;
+        document
+            .getElementById(
+                "statusFilter"
+            )
+            .value;
 
 
     let filtered =
-        appointments.filter(function (appointment) {
+        appointments.filter(
+            function (
+                appointment
+            ) {
 
-            const customer =
-                String(appointment.customer || "")
-                    .toLowerCase();
-
-            const service =
-                String(appointment.service || "")
-                    .toLowerCase();
-
-            const date =
-                String(appointment.date || "")
-                    .toLowerCase();
-
-            const time =
-                String(appointment.time || "")
-                    .toLowerCase();
-
-            const status =
-                getAppointmentStatus(appointment);
+                const customer =
+                    String(
+                        appointment.customer || ""
+                    ).toLowerCase();
 
 
-            const matchesSearch =
-                !search ||
-                customer.includes(search) ||
-                service.includes(search) ||
-                date.includes(search) ||
-                time.includes(search) ||
-                status.toLowerCase().includes(search);
+                const service =
+                    String(
+                        appointment.service || ""
+                    ).toLowerCase();
 
 
-            const matchesStatus =
-                statusFilter === "All" ||
-                status === statusFilter;
+                const date =
+                    String(
+                        appointment.date || ""
+                    ).toLowerCase();
 
 
-            return matchesSearch && matchesStatus;
-        });
+                const time =
+                    String(
+                        appointment.time || ""
+                    ).toLowerCase();
 
 
-    filtered.sort(function (a, b) {
-
-        const first =
-            `${a.date || ""} ${a.time || ""}`;
-
-        const second =
-            `${b.date || ""} ${b.time || ""}`;
+                const status =
+                    getAppointmentStatus(
+                        appointment
+                    );
 
 
-        return first.localeCompare(second);
-    });
+                const matchesSearch =
+                    !search ||
+                    customer.includes(search) ||
+                    service.includes(search) ||
+                    date.includes(search) ||
+                    time.includes(search) ||
+                    status
+                        .toLowerCase()
+                        .includes(search);
 
 
-    if (filtered.length === 0) {
+                const matchesStatus =
+                    statusFilter === "All" ||
+                    status === statusFilter;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus
+                );
+
+            }
+        );
+
+
+    filtered.sort(
+        function (
+            a,
+            b
+        ) {
+
+            const first =
+                `${a.date || ""} ${a.time || ""}`;
+
+
+            const second =
+                `${b.date || ""} ${b.time || ""}`;
+
+
+            return first.localeCompare(
+                second
+            );
+
+        }
+    );
+
+
+    if (
+        filtered.length === 0
+    ) {
 
         list.innerHTML =
-            `<div class="empty-message">
+            `
+            <div class="empty-message">
                 No appointments found.
-            </div>`;
+            </div>
+            `;
 
         return;
+
     }
 
 
     list.innerHTML =
-        filtered.map(function (appointment) {
+        filtered.map(
+            function (
+                appointment
+            ) {
 
-            const realIndex =
-                appointments.indexOf(appointment);
-
-
-            const status =
-                getAppointmentStatus(appointment);
-
-
-            let statusClass =
-                "status-booked";
+                const status =
+                    getAppointmentStatus(
+                        appointment
+                    );
 
 
-            if (status === "Completed") {
-                statusClass = "status-completed";
-            }
+                let statusClass =
+                    "status-booked";
 
 
-            if (status === "Cancelled") {
-                statusClass = "status-cancelled";
-            }
+                if (
+                    status === "Completed"
+                ) {
+
+                    statusClass =
+                        "status-completed";
+
+                }
 
 
-            if (status === "No-show") {
-                statusClass = "status-no-show";
-            }
+                if (
+                    status === "Cancelled"
+                ) {
+
+                    statusClass =
+                        "status-cancelled";
+
+                }
 
 
-            const payment =
-                getPayment(appointment);
+                if (
+                    status === "No-show"
+                ) {
+
+                    statusClass =
+                        "status-no-show";
+
+                }
 
 
-            return `
-                <div class="appointment-card">
-
-                    <div class="appointment-main">
-
-                        <h3>
-                            ${escapeHTML(
-                                appointment.customer
-                            )}
-                        </h3>
+                const payment =
+                    getPayment(
+                        appointment
+                    );
 
 
-                        <div class="appointment-meta">
-                            Service:
-                            ${escapeHTML(
-                                appointment.service
-                            )}
+                return `
+                    <div class="appointment-card">
+
+                        <div class="appointment-main">
+
+                            <h3>
+                                ${escapeHTML(
+                                    appointment.customer
+                                )}
+                            </h3>
+
+
+                            <div class="appointment-meta">
+
+                                Service:
+                                ${escapeHTML(
+                                    appointment.service
+                                )}
+
+                            </div>
+
+
+                            <div class="appointment-meta">
+
+                                📅
+                                ${escapeHTML(
+                                    appointment.date
+                                )}
+
+                                &nbsp;
+
+                                🕐
+                                ${escapeHTML(
+                                    appointment.time
+                                )}
+
+                            </div>
+
+
+                            <span
+                                class="
+                                    status-badge
+                                    ${statusClass}
+                                "
+                            >
+
+                                ${escapeHTML(
+                                    status
+                                )}
+
+                            </span>
+
+
+                            <div class="payment-info">
+
+                                💰 Paid:
+                                R${payment.toFixed(2)}
+
+                            </div>
+
                         </div>
 
 
-                        <div class="appointment-meta">
-                            📅 ${escapeHTML(
-                                appointment.date
-                            )}
-                            &nbsp;
-                            🕐 ${escapeHTML(
-                                appointment.time
-                            )}
-                        </div>
+                        <div class="appointment-actions">
 
 
-                        <span
-                            class="status-badge ${statusClass}">
+                            <select
+                                onchange="
+                                    changeAppointmentStatus(
+                                        '${appointment.id}',
+                                        this.value
+                                    )
+                                "
+                            >
 
-                            ${escapeHTML(status)}
+                                <option
+                                    value="Booked"
+                                    ${
+                                        status === "Booked"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Booked
+                                </option>
 
-                        </span>
+
+                                <option
+                                    value="Completed"
+                                    ${
+                                        status === "Completed"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Completed
+                                </option>
 
 
-                        <div class="payment-info">
+                                <option
+                                    value="Cancelled"
+                                    ${
+                                        status === "Cancelled"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Cancelled
+                                </option>
 
-                            💰 Paid:
-                            R${payment.toFixed(2)}
+
+                                <option
+                                    value="No-show"
+                                    ${
+                                        status === "No-show"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    No-show
+                                </option>
+
+                            </select>
+
+
+                            <button
+                                class="edit-btn"
+                                onclick="
+                                    editAppointment(
+                                        '${appointment.id}'
+                                    )
+                                "
+                            >
+                                Edit
+                            </button>
+
+
+                            <button
+                                class="delete-btn"
+                                onclick="
+                                    deleteAppointment(
+                                        '${appointment.id}'
+                                    )
+                                "
+                            >
+                                Delete
+                            </button>
+
 
                         </div>
 
                     </div>
+                `;
 
+            }
+        ).join("");
 
-                    <div class="appointment-actions">
-
-                        <select
-                            onchange="
-                                changeAppointmentStatus(
-                                    ${realIndex},
-                                    this.value
-                                )
-                            ">
-
-                            <option value="Booked"
-                                ${status === "Booked"
-                                    ? "selected"
-                                    : ""}>
-                                Booked
-                            </option>
-
-                            <option value="Completed"
-                                ${status === "Completed"
-                                    ? "selected"
-                                    : ""}>
-                                Completed
-                            </option>
-
-                            <option value="Cancelled"
-                                ${status === "Cancelled"
-                                    ? "selected"
-                                    : ""}>
-                                Cancelled
-                            </option>
-
-                            <option value="No-show"
-                                ${status === "No-show"
-                                    ? "selected"
-                                    : ""}>
-                                No-show
-                            </option>
-
-                        </select>
-
-
-                        <button
-                            class="edit-btn"
-                            onclick="
-                                editAppointment(
-                                    ${realIndex}
-                                )
-                            ">
-
-                            Edit
-
-                        </button>
-
-
-                        <button
-                            class="delete-btn"
-                            onclick="
-                                deleteAppointment(
-                                    ${realIndex}
-                                )
-                            ">
-
-                            Delete
-
-                        </button>
-
-                    </div>
-
-                </div>
-            `;
-
-        }).join("");
 }
 
 
-// ===============================
+// ==================================================
 // CHANGE STATUS
-// ===============================
+// ==================================================
 
-function changeAppointmentStatus(
-    index,
+async function changeAppointmentStatus(
+    id,
     newStatus
 ) {
 
-    appointments[index].status =
-        newStatus;
+    const appointment =
+        appointments.find(
+            function (item) {
+
+                return item.id === id;
+
+            }
+        );
 
 
-    saveData();
-
-    displayAppointments();
-
-    updateDashboard();
-}
-
-
-// ===============================
-// DELETE APPOINTMENT
-// ===============================
-
-function deleteAppointment(index) {
-
-    if (!confirm("Delete this appointment?")) {
+    if (!appointment) {
         return;
     }
 
 
-    appointments.splice(index, 1);
+    const {
+        updateDoc,
+        doc
+    } = window.firestoreFunctions;
 
-    saveData();
 
-    displayAppointments();
+    try {
 
-    updateDashboard();
+        await updateDoc(
+            doc(
+                db,
+                "users",
+                currentUser.uid,
+                "appointments",
+                id
+            ),
+            {
+                status: newStatus
+            }
+        );
+
+
+        appointment.status =
+            newStatus;
+
+
+        displayAppointments();
+
+        updateDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            "Could not update appointment."
+        );
+
+    }
+
 }
 
 
-// ===============================
+// ==================================================
+// DELETE APPOINTMENT
+// ==================================================
+
+async function deleteAppointment(
+    id
+) {
+
+    if (
+        !confirm(
+            "Delete this appointment?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        deleteDoc,
+        doc
+    } = window.firestoreFunctions;
+
+
+    try {
+
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                currentUser.uid,
+                "appointments",
+                id
+            )
+        );
+
+
+        appointments =
+            appointments.filter(
+                function (item) {
+
+                    return item.id !== id;
+
+                }
+            );
+
+
+        displayAppointments();
+
+        updateDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            "Could not delete appointment."
+        );
+
+    }
+
+}
+
+
+// ==================================================
 // APPOINTMENT MODAL
-// ===============================
+// ==================================================
 
 const appointmentModal =
-    document.getElementById("appointmentModal");
+    document.getElementById(
+        "appointmentModal"
+    );
+
 
 const customerModal =
-    document.getElementById("customerModal");
+    document.getElementById(
+        "customerModal"
+    );
+
 
 const serviceModal =
-    document.getElementById("serviceModal");
+    document.getElementById(
+        "serviceModal"
+    );
 
 
 document
-    .getElementById("addAppointmentBtn")
-    .addEventListener("click", function () {
+    .getElementById(
+        "addAppointmentBtn"
+    )
+    .addEventListener(
+        "click",
+        function () {
 
-        editingAppointmentIndex = null;
-
-
-        document.getElementById(
-            "appointmentModalTitle"
-        ).textContent =
-            "New Appointment";
-
-
-        populateCustomerDropdown();
-        populateServiceDropdown();
+            editingAppointmentId =
+                null;
 
 
-        document.getElementById(
-            "appointmentForm"
-        ).reset();
+            document.getElementById(
+                "appointmentModalTitle"
+            ).textContent =
+                "New Appointment";
 
 
-        document.getElementById(
-            "appointmentDate"
-        ).value =
-            getToday();
+            populateCustomerDropdown();
+
+            populateServiceDropdown();
 
 
-        document.getElementById(
-            "appointmentStatus"
-        ).value =
-            "Booked";
+            document.getElementById(
+                "appointmentForm"
+            ).reset();
 
 
-        document.getElementById(
-            "appointmentPayment"
-        ).value =
-            "";
+            document.getElementById(
+                "appointmentDate"
+            ).value =
+                getToday();
 
 
-        appointmentModal.classList.remove(
-            "hidden"
-        );
-    });
+            document.getElementById(
+                "appointmentStatus"
+            ).value =
+                "Booked";
+
+
+            document.getElementById(
+                "appointmentPayment"
+            ).value =
+                "";
+
+
+            appointmentModal.classList.remove(
+                "hidden"
+            );
+
+        }
+    );
 
 
 document
-    .getElementById("closeModalBtn")
-    .addEventListener("click", closeAppointmentModal);
+    .getElementById(
+        "closeModalBtn"
+    )
+    .addEventListener(
+        "click",
+        closeAppointmentModal
+    );
 
 
 function closeAppointmentModal() {
 
-    appointmentModal.classList.add("hidden");
+    appointmentModal.classList.add(
+        "hidden"
+    );
 
-    editingAppointmentIndex = null;
+
+    editingAppointmentId =
+        null;
+
 }
 
 
 appointmentModal.addEventListener(
     "click",
-    function (event) {
+    function (
+        event
+    ) {
 
-        if (event.target === appointmentModal) {
+        if (
+            event.target ===
+            appointmentModal
+        ) {
+
             closeAppointmentModal();
+
         }
 
     }
 );
 
 
-// ===============================
+// ==================================================
 // ADD / EDIT APPOINTMENT
-// ===============================
+// ==================================================
 
 document
-    .getElementById("appointmentForm")
+    .getElementById(
+        "appointmentForm"
+    )
     .addEventListener(
         "submit",
-        function (event) {
+        async function (
+            event
+        ) {
 
             event.preventDefault();
 
@@ -848,6 +1817,7 @@ document
                 );
 
                 return;
+
             }
 
 
@@ -855,13 +1825,18 @@ document
 
             const duplicate =
                 appointments.some(
-                    function (appointment, index) {
+                    function (
+                        appointment
+                    ) {
 
                         if (
-                            editingAppointmentIndex !== null &&
-                            index === editingAppointmentIndex
+                            editingAppointmentId &&
+                            appointment.id ===
+                            editingAppointmentId
                         ) {
+
                             return false;
+
                         }
 
 
@@ -884,6 +1859,7 @@ document
                 );
 
                 return;
+
             }
 
 
@@ -904,55 +1880,148 @@ document
             };
 
 
-            if (
-                editingAppointmentIndex !== null
-            ) {
+            const {
+                addDoc,
+                updateDoc,
+                doc
+            } = window.firestoreFunctions;
 
-                appointments[
-                    editingAppointmentIndex
-                ] = appointmentData;
 
-            } else {
+            try {
 
-                appointments.push(
-                    appointmentData
+                if (
+                    editingAppointmentId
+                ) {
+
+                    await updateDoc(
+                        doc(
+                            db,
+                            "users",
+                            currentUser.uid,
+                            "appointments",
+                            editingAppointmentId
+                        ),
+                        appointmentData
+                    );
+
+
+                    const index =
+                        appointments.findIndex(
+                            function (
+                                appointment
+                            ) {
+
+                                return (
+                                    appointment.id ===
+                                    editingAppointmentId
+                                );
+
+                            }
+                        );
+
+
+                    if (index !== -1) {
+
+                        appointments[index] = {
+
+                            id:
+                                editingAppointmentId,
+
+                            ...appointmentData
+
+                        };
+
+                    }
+
+
+                    alert(
+                        "Appointment updated successfully!"
+                    );
+
+
+                } else {
+
+                    const newAppointment =
+                        await addDoc(
+                            userCollection(
+                                "appointments"
+                            ),
+                            appointmentData
+                        );
+
+
+                    appointments.push({
+
+                        id:
+                            newAppointment.id,
+
+                        ...appointmentData
+
+                    });
+
+
+                    alert(
+                        "Appointment saved successfully!"
+                    );
+
+                }
+
+
+                displayAppointments();
+
+                updateDashboard();
+
+                closeAppointmentModal();
+
+
+            } catch (error) {
+
+                console.error(
+                    error
                 );
+
+
+                alert(
+                    "Could not save the appointment. Please check your internet connection."
+                );
+
             }
-
-
-            saveData();
-
-            displayAppointments();
-
-            updateDashboard();
-
-            closeAppointmentModal();
-
-            alert(
-                editingAppointmentIndex !== null
-                    ? "Appointment updated successfully!"
-                    : "Appointment saved successfully!"
-            );
 
         }
     );
 
 
-// ===============================
+// ==================================================
 // EDIT APPOINTMENT
-// ===============================
+// ==================================================
 
-function editAppointment(index) {
+function editAppointment(
+    id
+) {
 
     const appointment =
-        appointments[index];
+        appointments.find(
+            function (
+                item
+            ) {
+
+                return item.id === id;
+
+            }
+        );
 
 
-    editingAppointmentIndex =
-        index;
+    if (!appointment) {
+        return;
+    }
+
+
+    editingAppointmentId =
+        id;
 
 
     populateCustomerDropdown();
+
     populateServiceDropdown();
 
 
@@ -997,28 +2066,36 @@ function editAppointment(index) {
     document.getElementById(
         "appointmentPayment"
     ).value =
-        getPayment(appointment);
+        getPayment(
+            appointment
+        );
 
 
     appointmentModal.classList.remove(
         "hidden"
     );
+
 }
 
 
-// ===============================
+// ==================================================
 // CUSTOMER MODAL
-// ===============================
+// ==================================================
 
 document
-    .getElementById("addCustomerBtn")
+    .getElementById(
+        "addCustomerBtn"
+    )
     .addEventListener(
         "click",
         function () {
 
             document
-                .getElementById("customerForm")
+                .getElementById(
+                    "customerForm"
+                )
                 .reset();
+
 
             customerModal.classList.remove(
                 "hidden"
@@ -1029,7 +2106,9 @@ document
 
 
 document
-    .getElementById("closeCustomerModalBtn")
+    .getElementById(
+        "closeCustomerModalBtn"
+    )
     .addEventListener(
         "click",
         function () {
@@ -1044,27 +2123,38 @@ document
 
 customerModal.addEventListener(
     "click",
-    function (event) {
+    function (
+        event
+    ) {
 
-        if (event.target === customerModal) {
+        if (
+            event.target ===
+            customerModal
+        ) {
+
             customerModal.classList.add(
                 "hidden"
             );
+
         }
 
     }
 );
 
 
-// ===============================
+// ==================================================
 // ADD CUSTOMER
-// ===============================
+// ==================================================
 
 document
-    .getElementById("customerForm")
+    .getElementById(
+        "customerForm"
+    )
     .addEventListener(
         "submit",
-        function (event) {
+        async function (
+            event
+        ) {
 
             event.preventDefault();
 
@@ -1094,15 +2184,20 @@ document
                 );
 
                 return;
+
             }
 
 
             const exists =
                 customers.some(
-                    function (customer) {
+                    function (
+                        customer
+                    ) {
 
                         return (
-                            getCustomerName(customer)
+                            getCustomerName(
+                                customer
+                            )
                                 .toLowerCase() ===
                             name.toLowerCase()
                         );
@@ -1118,58 +2213,95 @@ document
                 );
 
                 return;
+
             }
 
 
-            customers.push({
-
-                name: name,
-
-                phone: phone
-
-            });
+            const {
+                addDoc
+            } = window.firestoreFunctions;
 
 
-            saveData();
+            try {
 
-            displayCustomers();
-
-            populateCustomerDropdown();
-
-            updateDashboard();
-
-
-            document
-                .getElementById("customerForm")
-                .reset();
-
-
-            customerModal.classList.add(
-                "hidden"
-            );
+                const newCustomer =
+                    await addDoc(
+                        userCollection(
+                            "customers"
+                        ),
+                        {
+                            name: name,
+                            phone: phone
+                        }
+                    );
 
 
-            alert(
-                "Customer saved successfully!"
-            );
+                customers.push({
+
+                    id:
+                        newCustomer.id,
+
+                    name: name,
+
+                    phone: phone
+
+                });
+
+
+                displayCustomers();
+
+                populateCustomerDropdown();
+
+                updateDashboard();
+
+
+                document
+                    .getElementById(
+                        "customerForm"
+                    )
+                    .reset();
+
+
+                customerModal.classList.add(
+                    "hidden"
+                );
+
+
+                alert(
+                    "Customer saved successfully!"
+                );
+
+
+            } catch (error) {
+
+                alert(
+                    "Could not save customer."
+                );
+
+            }
 
         }
     );
 
 
-// ===============================
+// ==================================================
 // SERVICE MODAL
-// ===============================
+// ==================================================
 
 document
-    .getElementById("addServiceBtn")
+    .getElementById(
+        "addServiceBtn"
+    )
     .addEventListener(
         "click",
         function () {
 
             document
-                .getElementById("serviceForm")
+                .getElementById(
+                    "serviceForm"
+                )
                 .reset();
+
 
             serviceModal.classList.remove(
                 "hidden"
@@ -1180,7 +2312,9 @@ document
 
 
 document
-    .getElementById("closeServiceModalBtn")
+    .getElementById(
+        "closeServiceModalBtn"
+    )
     .addEventListener(
         "click",
         function () {
@@ -1195,27 +2329,38 @@ document
 
 serviceModal.addEventListener(
     "click",
-    function (event) {
+    function (
+        event
+    ) {
 
-        if (event.target === serviceModal) {
+        if (
+            event.target ===
+            serviceModal
+        ) {
+
             serviceModal.classList.add(
                 "hidden"
             );
+
         }
 
     }
 );
 
 
-// ===============================
+// ==================================================
 // ADD SERVICE
-// ===============================
+// ==================================================
 
 document
-    .getElementById("serviceForm")
+    .getElementById(
+        "serviceForm"
+    )
     .addEventListener(
         "submit",
-        function (event) {
+        async function (
+            event
+        ) {
 
             event.preventDefault();
 
@@ -1256,15 +2401,20 @@ document
                 );
 
                 return;
+
             }
 
 
             const exists =
                 services.some(
-                    function (service) {
+                    function (
+                        service
+                    ) {
 
                         return (
-                            getServiceName(service)
+                            getServiceName(
+                                service
+                            )
                                 .toLowerCase() ===
                             name.toLowerCase()
                         );
@@ -1280,50 +2430,83 @@ document
                 );
 
                 return;
+
             }
 
 
-            services.push({
-
-                name: name,
-
-                price: price,
-
-                duration: duration
-
-            });
+            const {
+                addDoc
+            } = window.firestoreFunctions;
 
 
-            saveData();
+            try {
 
-            displayServices();
-
-            populateServiceDropdown();
-
-            updateDashboard();
-
-
-            document
-                .getElementById("serviceForm")
-                .reset();
-
-
-            serviceModal.classList.add(
-                "hidden"
-            );
+                const newService =
+                    await addDoc(
+                        userCollection(
+                            "services"
+                        ),
+                        {
+                            name: name,
+                            price: price,
+                            duration: duration
+                        }
+                    );
 
 
-            alert(
-                "Service saved successfully!"
-            );
+                services.push({
+
+                    id:
+                        newService.id,
+
+                    name: name,
+
+                    price: price,
+
+                    duration: duration
+
+                });
+
+
+                displayServices();
+
+                populateServiceDropdown();
+
+                updateDashboard();
+
+
+                document
+                    .getElementById(
+                        "serviceForm"
+                    )
+                    .reset();
+
+
+                serviceModal.classList.add(
+                    "hidden"
+                );
+
+
+                alert(
+                    "Service saved successfully!"
+                );
+
+
+            } catch (error) {
+
+                alert(
+                    "Could not save service."
+                );
+
+            }
 
         }
     );
 
 
-// ===============================
+// ==================================================
 // SEARCH & FILTER
-// ===============================
+// ==================================================
 
 document
     .getElementById(
@@ -1345,9 +2528,9 @@ document
     );
 
 
-// ===============================
+// ==================================================
 // CLEAR APPOINTMENTS
-// ===============================
+// ==================================================
 
 document
     .getElementById(
@@ -1355,15 +2538,18 @@ document
     )
     .addEventListener(
         "click",
-        function () {
+        async function () {
 
-            if (appointments.length === 0) {
+            if (
+                appointments.length === 0
+            ) {
 
                 alert(
                     "There are no appointments to clear."
                 );
 
                 return;
+
             }
 
 
@@ -1372,46 +2558,65 @@ document
                     "Are you sure you want to delete ALL appointments?"
                 )
             ) {
+
                 return;
+
             }
 
 
-            appointments = [];
-
-            saveData();
-
-            displayAppointments();
-
-            updateDashboard();
+            const {
+                deleteDoc,
+                doc
+            } = window.firestoreFunctions;
 
 
-            alert(
-                "All appointments have been deleted."
-            );
+            try {
+
+                for (
+                    const appointment
+                    of appointments
+                ) {
+
+                    await deleteDoc(
+                        doc(
+                            db,
+                            "users",
+                            currentUser.uid,
+                            "appointments",
+                            appointment.id
+                        )
+                    );
+
+                }
+
+
+                appointments = [];
+
+
+                displayAppointments();
+
+                updateDashboard();
+
+
+                alert(
+                    "All appointments have been deleted."
+                );
+
+
+            } catch (error) {
+
+                alert(
+                    "Could not clear appointments."
+                );
+
+            }
 
         }
     );
 
 
-// ===============================
-// START APP
-// ===============================
+// ==================================================
+// START
+// ==================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        displayCustomers();
-
-        displayServices();
-
-        populateCustomerDropdown();
-
-        populateServiceDropdown();
-
-        displayAppointments();
-
-        updateDashboard();
-
-    }
-); 
+startFirebase(); 
